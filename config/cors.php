@@ -31,7 +31,10 @@ return [
     /*
      * Matches the request origin. `['*']` allows all origins. Wildcards can be used, eg `*.mydomain.com`
      */
-    'allowed_origins' => ['http://192.168.0.8:8080'],
+    'allowed_origins' => explode(',', env(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:8080'
+    )),
 
     /*
      * Patterns that can be used with `preg_match` to match the origin.
@@ -56,5 +59,5 @@ return [
     /*
      * Sets the Access-Control-Allow-Credentials header.
      */
-    'supports_credentials' => true,
+    'supports_credentials' => env('CORS_SUPPORT_CREDENTIALS', false),
 ];

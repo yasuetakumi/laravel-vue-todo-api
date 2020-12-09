@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,12 +18,25 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
-Route::get('hello', function (Request $request) {
+
+Route::get('/sanctum/csrf-cookie', function (Request $request) {
+    /*
+    * Set xsrf cookie for login
+    */
+    return response()->json();
+});
+
+Route::get('/auth-check', 'Auth\LoginController@checkIsAuthenticated');
+Route::post('/login', 'Auth\LoginController@login');
+Route::get('/logout', 'Auth\LoginController@logout');
+
+Route::get('/hello', function (Request $request) {
+    $res = Auth::check();
     $minutes = 60;
     $path = "";
     $domain = "localhost";
     $response =  response()
-        ->json($_COOKIE)
+        ->json($res)
         ->cookie('testCookie2', 'testCookie2', $minutes, $path, $domain)
         ->withHeaders([
             'X-Header-One' => 'Header Value',

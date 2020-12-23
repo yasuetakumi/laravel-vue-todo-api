@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
 use stdClass;
 
-class LoginController extends Controller
-{
+class LoginController extends Controller {
 
     /* 
     * Login methods derived from here
@@ -19,15 +18,13 @@ class LoginController extends Controller
 
     private $isAuthenticated;
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->isAuthenticated = new stdClass();
         $this->isAuthenticated->error = "";
     }
 
 
-    public function logout(Request $request)
-    {
+    public function logout(Request $request) {
         $this->guard()->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -35,8 +32,7 @@ class LoginController extends Controller
         return $this->loggedOut($request) ?: response()->json($this->isAuthenticated);
     }
 
-    public function checkIsAuthenticated()
-    {
+    public function checkIsAuthenticated() {
         if (Auth::check()) {
             $username = Auth::user()->display_name;
             $this->setIsAuthenticated(true, $username);
@@ -46,8 +42,7 @@ class LoginController extends Controller
         return response()->json($this->isAuthenticated);
     }
 
-    protected function sendLoginResponse(Request $request)
-    {
+    protected function sendLoginResponse(Request $request) {
         $username = Auth::user()->display_name;
         $request->session()->regenerate();
         $this->clearLoginAttempts($request);
@@ -56,14 +51,12 @@ class LoginController extends Controller
             ?: response()->json($this->isAuthenticated);
     }
 
-    protected function sendFailedLoginResponse(Request $request)
-    {
+    protected function sendFailedLoginResponse(Request $request) {
         $this->setIsAuthenticated(false, '', [trans('auth.failed')]);
         return response()->json($this->isAuthenticated);
     }
 
-    protected function sendLockoutResponse(Request $request)
-    {
+    protected function sendLockoutResponse(Request $request) {
         $seconds = $this->limiter()->availableIn(
             $this->throttleKey($request)
         );
@@ -76,8 +69,7 @@ class LoginController extends Controller
         return response()->json($this->isAuthenticated);
     }
 
-    private function setIsAuthenticated($status, $username = '', $error = '')
-    {
+    private function setIsAuthenticated($status, $username = '', $error = '') {
         $this->isAuthenticated->status = $status;
         $this->isAuthenticated->username = $username;
         $this->isAuthenticated->error = $error;

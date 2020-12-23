@@ -30,6 +30,14 @@ Route::get('/auth-check', 'Auth\LoginController@checkIsAuthenticated');
 Route::post('/login', 'Auth\LoginController@login');
 Route::get('/logout', 'Auth\LoginController@logout');
 
+Route::get('/users', 'Api\UserController@getAll');
+Route::post('/users', 'Api\UserController@store');
+Route::get('/users/{userId}', 'Api\UserController@show');
+Route::post('/users/{userId}', 'Api\UserController@update');
+Route::delete('/users/{userId}', 'Api\UserController@destroy');
+
+
+
 Route::get('/hello', function (Request $request) {
     $res = Auth::check();
     $minutes = 60;

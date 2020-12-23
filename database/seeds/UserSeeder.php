@@ -6,15 +6,13 @@ use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class UserSeeder extends Seeder
-{
+class UserSeeder extends Seeder {
     /**
      * Run the database seeds.
      *
      * @return void
      */
-    public function run()
-    {
+    public function run() {
         $defaultAdmin = [
             'user_role_id'      => UserRole::ADMIN,
             'display_name'      => 'Administrator',
@@ -34,5 +32,6 @@ class UserSeeder extends Seeder
         ];
 
         User::insert([$defaultAdmin, $defaultUser]);
+        factory(User::class, 100)->create();
     }
 }

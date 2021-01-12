@@ -1,0 +1,17 @@
+# You can use this container just for using phpmyadmin.
+
+version: '3'
+services:
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        environment:
+            - PMA_ARBITRARY=0
+            - PMA_HOST=mysql
+            - PMA_USER=root
+            - PMA_PASSWORD=root
+        container_name: instance_phpmyadmin
+        ports:
+            - 8087:80
+        volumes:
+            - "../../phpmyadmin/sessions:/sessions"
+

@@ -31,10 +31,22 @@ Route::post('/login', 'Auth\LoginController@login');
 Route::get('/logout', 'Auth\LoginController@logout');
 
 Route::get('/users', 'Api\UserController@getAll');
+Route::get('/users/create', 'Api\UserController@create');
 Route::post('/users', 'Api\UserController@store');
 Route::get('/users/{userId}', 'Api\UserController@show');
+Route::get('/users/{userId}/edit', 'Api\UserController@edit');
 Route::post('/users/{userId}', 'Api\UserController@update');
 Route::delete('/users/{userId}', 'Api\UserController@destroy');
+
+// DUMMY ROUTE //
+Route::get('/dummy-meetings', 'Api\DummyMeetingController@getAll');
+Route::get('/dummy-meetings/create', 'Api\DummyMeetingController@create');
+Route::post('/dummy-meetings', 'Api\DummyMeetingController@store');
+Route::get('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@show');
+Route::get('/dummy-meetings/{meetingId}/edit', 'Api\DummyMeetingController@edit');
+Route::post('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@update');
+Route::delete('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@destroy');
+// --------------- //
 
 
 

@@ -16,6 +16,21 @@ class UserController extends Controller {
         return response()->json($users);
     }
 
+    public function create() {
+        $data = [];
+        $data['formData'] = $this->getFormData();
+        $data['submitUrl'] = '/users';
+        return response()->json($data);
+    }
+
+    public function edit(Request $request) {
+        $data = [];
+        $data['item'] = User::find($request->userId);
+        $data['formData'] = $this->getFormData();
+        $data['submitUrl'] = '/users/' . $request->userId;
+        return response()->json($data);
+    }
+
     public function show(Request $request) {
         return response()->json(User::find(request('userId')));
     }
@@ -50,5 +65,10 @@ class UserController extends Controller {
 
     private function finalize($users, $perPage) {
         return $users->paginate($perPage);
+    }
+
+    private function getFormData() {
+        $data = [];
+        return $data;
     }
 }

@@ -5,6 +5,7 @@ return [
     /*
     |--------------------------------------------------------------------------
     | Laravel CORS Options
+      Configure of https://github.com/fruitcake/laravel-cors
     |--------------------------------------------------------------------------
     |
     | The allowed_methods and allowed_headers options are case-insensitive.
@@ -33,7 +34,7 @@ return [
      */
     'allowed_origins' => explode(',', env(
         'CORS_ALLOWED_ORIGINS',
-        'http://localhost:3000'
+        'http://localhost:3000',
     )),
 
     /*

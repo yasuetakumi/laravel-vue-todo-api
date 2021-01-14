@@ -49,6 +49,10 @@ class DummyMeetingController extends Controller {
         return response()->json('success');
     }
 
+    public function destroy(Request $request) {
+        return response()->json(DummyMeeting::destroy($request->meetingId));
+    }
+
     private function sort($meetings, $sortBy, $sortDesc, $multiSort) {
         if ($sortDesc) {
             if ($multiSort) {

@@ -5,6 +5,7 @@ return [
     /*
     |--------------------------------------------------------------------------
     | Laravel CORS Options
+      Configure of https://github.com/fruitcake/laravel-cors
     |--------------------------------------------------------------------------
     |
     | The allowed_methods and allowed_headers options are case-insensitive.
@@ -31,10 +32,7 @@ return [
     /*
      * Matches the request origin. `['*']` allows all origins. Wildcards can be used, eg `*.mydomain.com`
      */
-    'allowed_origins' => explode(',', env(
-        'CORS_ALLOWED_ORIGINS',
-        'http://localhost:3000'
-    )),
+    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS','http://localhost:3000',)),
 
     /*
      * Patterns that can be used with `preg_match` to match the origin.

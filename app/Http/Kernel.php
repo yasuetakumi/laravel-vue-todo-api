@@ -19,8 +19,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\CheckForMaintenanceMode::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
-        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        'cors' => \App\Http\Middleware\Cors::class,
+        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class
     ];
 
     /**
@@ -40,8 +39,8 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            \App\Http\Middleware\EncryptCookies::class,
-            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\EncryptCookies::class, // this project use cookie on API request.
+            \Illuminate\Session\Middleware\StartSession::class, // this project use session on API request.
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class, // added for laravel sanctum auth
             'throttle:60,1',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,

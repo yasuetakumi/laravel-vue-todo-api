@@ -20,14 +20,14 @@ class DummyMeetingController extends Controller {
         $meetings = $this->finalize($meetings, $perPage);
         $data->meetings = $meetings;
         $data->formData = $this->getFormData();
-        return response()->json($data);
+        return successResponse($data);
     }
 
     public function create() {
         $data = [];
         $data['formData'] = $this->getFormData();
         $data['submitUrl'] = '/dummy-meetings';
-        return response()->json($data);
+        return successResponse($data);
     }
 
     public function edit(Request $request) {
@@ -35,37 +35,42 @@ class DummyMeetingController extends Controller {
         $data['item'] = DummyMeeting::find($request->meetingId);
         $data['formData'] = $this->getFormData();
         $data['submitUrl'] = '/dummy-meetings/' . $request->meetingId;
-        return response()->json($data);
+        return successResponse($data);
     }
 
     public function show(Request $request) {
-        return response()->json(DummyMeeting::find(request('meetingId')));
+        return successResponse(DummyMeeting::find(request('meetingId')));
     }
 
     public function store(Request $request) {
-        $data = $request->all();
-        if (array_key_exists('location_image', $data)) {
-            Log::error($data['location_image']);
-            $data['location_image_url'] = Storage::putFile('meetings', $data['location_image']);
-            unset($data['location_image']);
-        }
+        try {
+            $data = $request->all();
+            if (array_key_exists('location_image', $data)) {
+                Log::error($data['location_image']);
+                $data['location_image_url'] = Storage::putFile('meetings', $data['location_image']);
+                unset($data['location_image']);
+            }
 
-        DummyMeeting::insert($data);
-        return response()->json('success');
+            DummyMeeting::insert($data);
+            return successResponse();
+        } catch (Exception $e) {
+            return errorResponse($e->getMessage());
+        }
     }
 
     public function destroy(Request $request) {
-        return response()->json(DummyMeeting::destroy($request->meetingId));
+        return successResponse(DummyMeeting::destroy($request->meetingId));
     }
 
     private function filter($meetings, $params) {
+        Log::error($params);
         if (array_key_exists('title', $params)) {
             $meetings->where('title', 'like', '%' . $params['title'] . '%');
         }
-        if (array_key_exists('customer', $params)) {
+        if (array_key_exists('customer', $params) && $params['customer'] != 'undefined') {
             $meetings->where('customer', $params['customer']);
         }
-        if (array_key_exists('attendee', $params)) {
+        if (array_key_exists('attendee', $params) && $params['attendee'] != 'undefined') {
             $meetings->where('attendee', $params['attendee']);
         }
         return $meetings;

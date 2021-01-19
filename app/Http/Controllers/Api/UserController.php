@@ -4,19 +4,26 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserRole;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use stdClass;
 
 class UserController extends Controller {
     public function getAll(Request $request) {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
         $users = User::query();
+        $users = $this->filter($users, $params);
         $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
         $users = $this->finalize($users, $perPage);
-        return response()->json($users);
+
+        $data = new stdClass();
+        $data->users = $users;
+        $data->formData = $this->getFormData();
+        return successResponse($data);
     }
 
     public function create() {
@@ -60,6 +67,20 @@ class UserController extends Controller {
             return errorResponse($e->getMessage());
         }
     }
+
+    private function filter($meetings, $params) {
+        if (array_key_exists('userRole', $params) && $params['userRole'] != 'undefined') {
+            $meetings->where('user_role_id', $params['userRole']);
+        }
+        if (array_key_exists('name', $params)) {
+            $meetings->where('display_name', 'like', '%' . $params['name'] . '%');
+        }
+        if (array_key_exists('email', $params)) {
+            $meetings->where('email', 'like', '%' . $params['email'] . '%');
+        }
+        return $meetings;
+    }
+
     private function sort($users, $sortBy, $sortDesc, $multiSort) {
         if ($sortDesc) {
             if ($multiSort) {
@@ -78,7 +99,7 @@ class UserController extends Controller {
     }
 
     private function getFormData() {
-        $data = [];
+        $data['userRoles'] = UserRole::all();
         return $data;
     }
 }

@@ -11,13 +11,14 @@ use stdClass;
 
 class DummyMeetingController extends Controller {
     public function getAll(Request $request) {
-        $data = new stdClass();
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
         $meetings = DummyMeeting::query();
         $meetings = $this->filter($meetings, $params);
         $meetings = $this->sort($meetings, $params['sortBy'], $params['sortDesc'], false);
         $meetings = $this->finalize($meetings, $perPage);
+
+        $data = new stdClass();
         $data->meetings = $meetings;
         $data->formData = $this->getFormData();
         return successResponse($data);
@@ -63,7 +64,6 @@ class DummyMeetingController extends Controller {
     }
 
     private function filter($meetings, $params) {
-        Log::error($params);
         if (array_key_exists('title', $params)) {
             $meetings->where('title', 'like', '%' . $params['title'] . '%');
         }

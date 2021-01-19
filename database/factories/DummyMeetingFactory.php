@@ -9,8 +9,9 @@ use Faker\Generator as Faker;
 $factory->define(DummyMeeting::class, function (Faker $faker) {
     return [
         'title' => $faker->realText(100),
-        'customer' => rand(0, count(DummyMeeting::CUSTOMER) - 1),
+        'customer' => rand(1, count(DummyMeeting::CUSTOMER)),
         'meeting_date' => Carbon::today()->addDays(rand(0, 365)),
+        'attendee' => rand(0, 1),
         'created_at' => Carbon::now(),
         'updated_at' => Carbon::now(),
     ];

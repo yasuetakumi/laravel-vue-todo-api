@@ -17,9 +17,15 @@ class DummyMeeting extends Model {
         ['value' => 8, 'text' => 'Microsoft'],
     ];
 
+    const ATTENDEE = [
+        ['value' => 0, 'text' => 'President'],
+        ['value' => 1, 'text' => 'Vice President'],
+    ];
+
     protected $fillable = [
         'title',
         'customer',
+        'attendee',
         'meeting_date',
         'location_image_url'
     ];

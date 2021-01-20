@@ -16,6 +16,7 @@ class CreateDummyMeetingsTable extends Migration {
             $table->string('title', 255);
             $table->bigInteger('customer');
             $table->date('meeting_date');
+            $table->bigInteger('attendee');
             $table->string('location_image_url', 255)->nullable();
             $table->timestamps();
         });

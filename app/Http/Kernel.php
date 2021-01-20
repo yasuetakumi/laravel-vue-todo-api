@@ -4,8 +4,7 @@ namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
-class Kernel extends HttpKernel
-{
+class Kernel extends HttpKernel {
     /**
      * The application's global HTTP middleware stack.
      *
@@ -39,9 +38,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            \App\Http\Middleware\EncryptCookies::class, // this project use cookie on API request.
-            \Illuminate\Session\Middleware\StartSession::class, // this project use session on API request.
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class, // added for laravel sanctum auth
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class, // added for laravel sanctum auth (include session and encrypt cookies internally)
             'throttle:60,1',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],

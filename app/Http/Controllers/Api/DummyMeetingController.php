@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DummyMeeting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use stdClass;
 
@@ -32,8 +31,11 @@ class DummyMeetingController extends Controller {
     }
 
     public function edit(Request $request) {
+        $item = DummyMeeting::find($request->meetingId);
+        $item['location_image_url'] = $item['location_image_url'] ? Storage::url($item['location_image_url']) : '';
+
         $data = [];
-        $data['item'] = DummyMeeting::find($request->meetingId);
+        $data['item'] = $item;
         $data['formData'] = $this->getFormData();
         $data['submitUrl'] = '/dummy-meetings/' . $request->meetingId;
         return successResponse($data);
@@ -47,12 +49,33 @@ class DummyMeetingController extends Controller {
         try {
             $data = $request->all();
             if (array_key_exists('location_image', $data)) {
-                Log::error($data['location_image']);
+                $data['location_image_url'] = Storage::putFile('meetings', $data['location_image']);
+                unset($data['location_image']);
+            }
+            unset($data['location_image_modified']);
+
+            DummyMeeting::insert($data);
+            return successResponse();
+        } catch (Exception $e) {
+            return errorResponse($e->getMessage());
+        }
+    }
+
+    public function update(Request $request) {
+        try {
+            $data = $request->all();
+            $meeting = DummyMeeting::find($request->meetingId);
+            if ($data['location_image_modified']) {
+                $fileUrl = $meeting->location_image_url;
+                Storage::delete($fileUrl);
+                $data['location_image_url'] = '';
+            }
+            if (array_key_exists('location_image', $data)) {
                 $data['location_image_url'] = Storage::putFile('meetings', $data['location_image']);
                 unset($data['location_image']);
             }
 
-            DummyMeeting::insert($data);
+            $meeting->update($data);
             return successResponse();
         } catch (Exception $e) {
             return errorResponse($e->getMessage());

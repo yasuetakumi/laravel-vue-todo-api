@@ -24,10 +24,10 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
     return response()->json();
 });
 Route::get('/auth-check', 'Auth\LoginController@checkIsAuthenticated');
-Route::post('/login', 'Auth\LoginController@login');
-Route::get('/logout', 'Auth\LoginController@logout');
+Route::post('/{guard}/login', 'Auth\LoginController@login');
+Route::get('/{guard}/logout', 'Auth\LoginController@logout');
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:userSanctum'])->group(function () {
 
 
     Route::get('/users', 'Api\UserController@getAll');

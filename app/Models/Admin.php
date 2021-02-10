@@ -5,14 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Admin extends Model {
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    use Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'display_name',
-        'password',
-        'email'
+        'display_name', 'email', 'password',
+    ];
+
+    protected $hidden = [
+        'password', 'remember_token',
     ];
 }

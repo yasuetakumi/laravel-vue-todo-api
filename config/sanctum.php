@@ -18,8 +18,6 @@ return [
         'localhost:3000, spa-starter-vue2.gruneasia2.info/, spa-starter-vue2.gruneasia2.info'
     )),
 
-    'guard' => 'userWeb',
-
     /*
     |--------------------------------------------------------------------------
     | Expiration Minutes

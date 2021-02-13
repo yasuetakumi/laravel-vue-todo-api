@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
 use stdClass;
@@ -15,27 +16,48 @@ class LoginController extends Controller {
     * Login methods derived from here
     */
     use AuthenticatesUsers;
-
-    private $isAuthenticated;
+    private $sessionGuards;
+    private $authInfo;
     private $guard;
+    private $authGuard;
 
     public function __construct(Request $request) {
-        $this->guard = $request->guard ? Auth::guard($request->guard . 'Web') : null;
-        $this->isAuthenticated = new stdClass();
-        $this->isAuthenticated->error = "";
+        $this->sessionGuards = Arr::where(config('auth.guards'), function ($value, $key) {
+            return $key == 'web' ? false : $value['driver'] == 'session';
+        });
+        $this->guard = $request->guard ?: '';
+        $this->authGuard = Auth::guard($this->guard);
+        $this->authInfo = new AuthInfo($this->guard);
     }
 
     public function checkIsAuthenticated() {
-        if (Auth::guard('userWeb')->check()) {
-            $username = Auth::guard('userWeb')->user()->display_name;
-            $this->setIsAuthenticated(true, $username);
-        } else if (Auth::guard('adminWeb')->check()) {
-            $username = Auth::guard('adminWeb')->user()->display_name;
-            $this->setIsAuthenticated(true, $username);
-        } else {
-            $this->setIsAuthenticated(false);
+        $isAuthenticated = false;
+        /*
+        * Default guard ('web')
+        */
+        if (Auth::guard()->check()) {
+            $isAuthenticated = true;
+            $username = Auth::user()->display_name;
+            $this->authInfo->setAuthenticated($username);
+            return response()->json($this->authInfo);
         }
-        return response()->json($this->isAuthenticated);
+
+        /*
+        * Other session guards
+        */
+        foreach ($this->sessionGuards as $key => $value) {
+            if (Auth::guard($key)->check()) {
+                $isAuthenticated = true;
+                $username = Auth::guard($key)->user()->display_name;
+                $this->authInfo->setAuthenticated($username, $key);
+                break;
+            }
+        }
+        if ($isAuthenticated) return response()->json($this->authInfo);
+
+        else {
+            return response()->json($this->authInfo->invalidate());
+        }
     }
 
     public function login(Request $request) {
@@ -58,15 +80,14 @@ class LoginController extends Controller {
     }
 
     public function logout(Request $request) {
-        $this->guard()->logout();
+        $this->authGuard->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        $this->setIsAuthenticated(false);
-        return $this->loggedOut($request) ?: response()->json($this->isAuthenticated);
+        return response()->json($this->authInfo->invalidate());
     }
 
     private function attemptLogin(Request $request) {
-        return $this->guard()->attempt(
+        return $this->authGuard->attempt(
             $this->credentials($request),
             $request->filled('remember')
         );
@@ -74,17 +95,15 @@ class LoginController extends Controller {
 
 
     private function sendLoginResponse(Request $request) {
-        $username = $this->guard()->user()->display_name;
+        $username = $this->authGuard->user()->display_name;
         $request->session()->regenerate();
         $this->clearLoginAttempts($request);
-        $this->setIsAuthenticated(true, $username);
-        return $this->authenticated($request, $this->guard()->user())
-            ?: response()->json($this->isAuthenticated);
+        $this->authInfo->setAuthenticated($username, $this->guard);
+        return response()->json($this->authInfo);
     }
 
     private function sendFailedLoginResponse(Request $request) {
-        $this->setIsAuthenticated(false, '', [trans('auth.failed')]);
-        return response()->json($this->isAuthenticated);
+        return response()->json($this->authInfo->invalidate()->setError([trans('auth.failed')]));
     }
 
     private function sendLockoutResponse(Request $request) {
@@ -92,21 +111,42 @@ class LoginController extends Controller {
             $this->throttleKey($request)
         );
 
-        $this->setIsAuthenticated(false, '', [Lang::get('auth.throttle', [
+        return response()->json($this->authInfo->invalidate()->setError([Lang::get('auth.throttle', [
             'seconds' => $seconds,
             'minutes' => ceil($seconds / 60),
-        ])]);
+        ])]));
+    }
+}
 
-        return response()->json($this->isAuthenticated);
+class AuthInfo {
+    public $status = false;
+    public $guard;
+    public $username = '';
+    public $role = '';
+    public $error = '';
+
+    public function __construct($guard = '') {
+        $this->guard = $guard;
     }
 
-    private function guard() {
-        return $this->guard;
+    public function setAuthenticated($username, $guard = '', $role = '') {
+        $this->status = true;
+        $this->username = $username;
+        $this->guard = $guard;
+        $this->role = $role;
+        return $this;
     }
 
-    private function setIsAuthenticated($status, $username = '', $error = '') {
-        $this->isAuthenticated->status = $status;
-        $this->isAuthenticated->username = $username;
-        $this->isAuthenticated->error = $error;
+    public function invalidate() {
+        $this->status = false;
+        $this->username = '';
+        $this->role = '';
+        $this->error = '';
+        return $this;
+    }
+
+    public function setError($error) {
+        $this->error = $error;
+        return $this;
     }
 }

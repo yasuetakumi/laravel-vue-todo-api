@@ -40,25 +40,22 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-
         'api' => [
             'driver' => 'token',
             'provider' => 'users',
             'hash' => false,
         ],
-        'userWeb' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
-        'adminWeb' => [
+        'admin' => [
             'driver' => 'session',
             'provider' => 'admins',
         ],
-        'userSanctum' => [
+
+        'sanctum' => [
             'driver' => 'sanctum',
-            'provider' => 'users'
+            'provider' => 'users',
         ],
         'adminSanctum' => [
+            'baseName' => 'admin',
             'driver' => 'sanctum',
             'provider' => 'admins'
         ]
@@ -90,11 +87,6 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*

@@ -24,12 +24,18 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
     return response()->json();
 });
 Route::get('/auth-check', 'Auth\LoginController@checkIsAuthenticated');
+Route::post('/login', 'Auth\LoginController@login');
+Route::get('/logout', 'Auth\LoginController@logout');
+
+/*
+* In case we want different user provider for our session,
+* we can use the following endpoints.
+*/
 Route::post('/{guard}/login', 'Auth\LoginController@login');
 Route::get('/{guard}/logout', 'Auth\LoginController@logout');
 
-Route::middleware(['auth:userSanctum'])->group(function () {
 
-
+Route::middleware(['auth:web,admin'])->group(function () {
     Route::get('/users', 'Api\UserController@getAll');
     Route::get('/users/create', 'Api\UserController@create');
     Route::post('/users', 'Api\UserController@store');

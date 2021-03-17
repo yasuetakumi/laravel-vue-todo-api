@@ -24,3 +24,15 @@ Via docker:
    Pass : 12345678
 
 8. (Access to phpMyAdmin is http://localhost:8087)
+
+
+
+When occur the following issue
+> In PackageManifest.php line 122:
+>                
+>  Undefined index: name  
+>                         
+Since it is due not to correspond composer update(php7.4-) by Laravel 6.x , we need to manually fix vendor code.
+> https://github.com/laravel/framework/pull/32310/files#diff-f23f27e11552f50c073957465c42205556b39fd668e919e1288323c0f3f77bdd
+Fix > [project root]/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php
+

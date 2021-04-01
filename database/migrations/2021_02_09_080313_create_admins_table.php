@@ -15,9 +15,10 @@ class CreateAdminsTable extends Migration {
             $table->bigIncrements('id');
             $table->string('display_name', 191);
             $table->string('password', 191);
-            $table->string('email', 191);
+            $table->string('email', 191)->unique();
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

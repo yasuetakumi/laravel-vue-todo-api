@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 
-class UserController extends Controller {
-    public function getAll(Request $request) {
+class UserController extends Controller
+{
+    public function getAll(Request $request)
+    {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
         $users = User::query();
@@ -26,14 +28,16 @@ class UserController extends Controller {
         return successResponse($data);
     }
 
-    public function create() {
+    public function create()
+    {
         $data = [];
         $data['formData'] = $this->getFormData();
         $data['submitUrl'] = '/users';
         return successResponse($data);
     }
 
-    public function edit(Request $request) {
+    public function edit(Request $request)
+    {
         $data = [];
         $data['item'] = User::find($request->userId);
         $data['formData'] = $this->getFormData();
@@ -41,23 +45,31 @@ class UserController extends Controller {
         return successResponse($data);
     }
 
-    public function show(Request $request) {
+    public function show(Request $request)
+    {
         return successResponse(User::find(request('userId')));
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $data = $request->all();
+        $data['password'] = bcrypt($data['password']);
         User::insert($data);
         return successResponse();
     }
 
-    public function update(Request $request) {
+    public function update(Request $request)
+    {
         $data = $request->all();
+        if (array_key_exists('password', $data)) {
+            $data['password'] = bcrypt($data['password']);
+        }
         User::where('id', request('userId'))->update($data);
         return successResponse();
     }
 
-    public function destroy(Request $request) {
+    public function destroy(Request $request)
+    {
         try {
             if (Auth::user()->id == $request->userId) {
                 throw new Exception('Cannot delete self account');
@@ -68,7 +80,8 @@ class UserController extends Controller {
         }
     }
 
-    private function filter($meetings, $params) {
+    private function filter($meetings, $params)
+    {
         if (array_key_exists('userRole', $params) && $params['userRole'] != 'undefined') {
             $meetings->where('user_role_id', $params['userRole']);
         }
@@ -81,7 +94,8 @@ class UserController extends Controller {
         return $meetings;
     }
 
-    private function sort($users, $sortBy, $sortDesc, $multiSort) {
+    private function sort($users, $sortBy, $sortDesc, $multiSort)
+    {
         if ($sortDesc) {
             if ($multiSort) {
                 foreach ($sortBy as $key => $item) {
@@ -94,11 +108,13 @@ class UserController extends Controller {
         return $users;
     }
 
-    private function finalize($users, $perPage) {
+    private function finalize($users, $perPage)
+    {
         return $users->paginate($perPage);
     }
 
-    private function getFormData() {
+    private function getFormData()
+    {
         $data['userRoles'] = UserRole::all();
         return $data;
     }

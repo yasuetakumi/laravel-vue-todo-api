@@ -7,7 +7,8 @@ if (!function_exists('successResponse')) {
    * @param  string $person Name
    * @return string
    */
-  function successResponse($data = '', $message = "Successfully process the request", $code = 200) {
+  function successResponse($data = '', $message = "Successfully process the request", $code = 200)
+  {
     $res = [
       'data' => $data,
       'message' => $message
@@ -24,11 +25,12 @@ if (!function_exists('errorResponse')) {
    * @param  string $person Name
    * @return string
    */
-  function errorResponse($message = "Unable to process the request", $code = 400) {
+  function errorResponse($message = "Unable to process the request", $code = 400)
+  {
     $res = [
       'message' => $message
     ];
 
-    return response()->json($res, 400);
+    return response()->json($res, $code);
   }
 }

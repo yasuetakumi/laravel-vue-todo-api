@@ -31,7 +31,7 @@ pipelines:
           script:
             - apt-get update
             - apt-get -qq install git-ftp
-            - git ftp push --user $FTP_USERNAME_TEST --passwd $FTP_PASSWORD_TEST $FTP_HOST_PATH_TEST -s deploy_test_to_xserver
+            - git ftp push --force --auto-init --insecure --changed-only --user $FTP_USERNAME_TEST --passwd $FTP_PASSWORD_TEST $FTP_HOST_PATH_TEST -s deploy_test_to_xserver
     release/test_deploy_init: #please create this branch first time before start test_deploy.
       - step:
           caches:
@@ -47,7 +47,7 @@ pipelines:
           script:
             - apt-get update
             - apt-get -qq install git-ftp
-            - git ftp push --user $FTP_USERNAME_DEMO --passwd $FTP_PASSWORD_DEMO $FTP_HOST_PATH_DEMO -s deploy_demo_to_xserver
+            - git ftp push --force --auto-init --insecure --changed-only --user $FTP_USERNAME_DEMO --passwd $FTP_PASSWORD_DEMO $FTP_HOST_PATH_DEMO -s deploy_demo_to_xserver
     release/deploy_demo_site_init: #please create this branch first time before git ftp push.
       - step:
           caches:

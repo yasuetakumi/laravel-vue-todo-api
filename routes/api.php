@@ -27,6 +27,10 @@ Route::get('/auth-check', 'Auth\LoginController@checkIsAuthenticated');
 Route::post('/login', 'Auth\LoginController@login');
 Route::get('/logout', 'Auth\LoginController@logout');
 
+Route::get('/hand-shake', function(){
+    return response()->json(["result"=>"___SUCCESS___"]);
+});
+
 /*
 * In case we want different user provider for our session,
 * we can use the following endpoints.

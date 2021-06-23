@@ -13,7 +13,7 @@ pipelines:
     #             SERVER: $SSH_HOST
     #             REMOTE_PATH: 'gruneasia2.info/public_html/spa-starter-laravel6'
     #             LOCAL_PATH: '.'
-    #             EXTRA_ARGS: '--exclude-from=deployment-exclude-list.txt'
+    #             EXTRA_ARGS: '--exclude-from=deployment-exclude-list.txt --ignore-times'
     #             DEBUG: 'true'
     #             SSH_PORT: $SSH_PORT
     #   - step:

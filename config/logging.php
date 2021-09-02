@@ -39,6 +39,7 @@ return [
             'driver' => 'stack',
             'channels' => ['daily'],
             'ignore_exceptions' => false,
+            'permission' => 0666, // Relaxing restriction to write by commands(on scheduler)
         ],
 
         'single' => [

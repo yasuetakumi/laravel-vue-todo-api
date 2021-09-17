@@ -12,7 +12,7 @@ class TrustProxies extends Middleware
      *
      * @var array|string
      */
-    protected $proxies;
+    protected $proxies = '*'; // Apply reverse proxy( e.g. SSL forward on ALB ).
 
     /**
      * The headers that should be used to detect proxies.

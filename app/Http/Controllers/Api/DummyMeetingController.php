@@ -87,17 +87,36 @@ class DummyMeetingController extends Controller {
     }
 
     private function filter($meetings, $params) {
-        if (array_key_exists('title', $params)) {
+        if(isset($params['title'])){
             $meetings->where('title', 'like', '%' . $params['title'] . '%');
         }
-        if (array_key_exists('customer', $params) && $params['customer'] != 'undefined') {
+        if(isset($params['customer'])){
             $meetings->where('customer', $params['customer']);
         }
-        if (array_key_exists('attendee', $params) && $params['attendee'] != 'undefined') {
+        if( array_key_exists('attendee', $params) && is_numeric($params['attendee'])){
             $meetings->where('attendee', $params['attendee']);
+        }
+        if(isset($params['meeting_date_start'])){
+            $meetings->whereDate('meeting_date', '>=', $params['meeting_date_start']);
+        }
+        if(isset($params['meeting_date_end'])){
+            $meetings->whereDate('meeting_date', '<=', $params['meeting_date_end']);
         }
         return $meetings;
     }
+
+    // private function filter($meetings, $params) {
+    //     if (array_key_exists('title', $params)) {
+    //         $meetings->where('title', 'like', '%' . $params['title'] . '%');
+    //     }
+    //     if (array_key_exists('customer', $params) && $params['customer'] != 'undefined') {
+    //         $meetings->where('customer', $params['customer']);
+    //     }
+    //     if (array_key_exists('attendee', $params) && $params['attendee'] != 'undefined') {
+    //         $meetings->where('attendee', $params['attendee']);
+    //     }
+    //     return $meetings;
+    // }
 
     private function sort($meetings, $sortBy, $sortDesc, $multiSort) {
         if ($sortDesc) {

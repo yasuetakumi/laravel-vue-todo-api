@@ -17,7 +17,12 @@ class UserController extends Controller
     {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
-        $users = User::query();
+        $users = User::select([
+            'users.*',
+            'user_roles.label as role_label'
+        ]);
+        $users->join('user_roles', 'user_roles.id', '=', 'users.user_role_id');
+
         $users = $this->filter($users, $params);
         $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
         $users = $this->finalize($users, $perPage);
@@ -25,6 +30,7 @@ class UserController extends Controller
         $data = new stdClass();
         $data->users = $users;
         $data->formData = $this->getFormData();
+
         return successResponse($data);
     }
 
@@ -80,18 +86,18 @@ class UserController extends Controller
         }
     }
 
-    private function filter($meetings, $params)
+    private function filter($users, $params)
     {
         if (array_key_exists('userRole', $params) && $params['userRole'] != 'undefined') {
-            $meetings->where('user_role_id', $params['userRole']);
+            $users->where('user_role_id', $params['userRole']);
         }
         if (array_key_exists('name', $params)) {
-            $meetings->where('display_name', 'like', '%' . $params['name'] . '%');
+            $users->where('display_name', 'like', '%' . $params['name'] . '%');
         }
         if (array_key_exists('email', $params)) {
-            $meetings->where('email', 'like', '%' . $params['email'] . '%');
+            $users->where('email', 'like', '%' . $params['email'] . '%');
         }
-        return $meetings;
+        return $users;
     }
 
     private function sort($users, $sortBy, $sortDesc, $multiSort)
@@ -99,10 +105,10 @@ class UserController extends Controller
         if ($sortDesc) {
             if ($multiSort) {
                 foreach ($sortBy as $key => $item) {
-                    $users->orderBy($item, $sortDesc[$key] ? 'desc' : 'asc');
+                    $users->orderBy($item, $sortDesc[$key]=='true' ? 'desc' : 'asc');
                 }
             } else {
-                $users->orderBy($sortBy, $sortDesc ? 'desc' : 'asc');
+                $users->orderBy($sortBy, $sortDesc=='true' ? 'desc' : 'asc');
             }
         }
         return $users;
@@ -116,6 +122,38 @@ class UserController extends Controller
     private function getFormData()
     {
         $data['userRoles'] = UserRole::all();
+        return $data;
+    }
+
+    public function downloadCSV(Request $request)
+    {
+        $params = $request->all();
+        $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
+        $users = User::select([
+            'users.*',
+            'user_roles.label as role_label'
+        ]);
+        $users->join('user_roles', 'user_roles.id', '=', 'users.user_role_id');
+
+        $users = $this->filter($users, $params);
+        $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
+
+        $filename = public_path("user_list.csv");
+        $handle = fopen($filename, 'w+');
+        fputcsv($handle, array('id', 'user_roles.label', 'display_name', 'email'));
+
+        foreach($users->get() as $row) {
+            fputcsv($handle, array($row['id'], $row['role_label'], $row['display_name'], $row['email']));
+        }
+
+        fclose($handle);
+
+        $headers = array(
+            'Content-Type' => 'text/csv',
+        );
+
+        $data = response()->download($filename, 'user_list.csv', $headers);
+
         return $data;
     }
 }

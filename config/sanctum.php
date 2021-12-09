@@ -15,7 +15,7 @@ return [
 
     'stateful' => explode(',', env(
         'SANCTUM_STATEFUL_DOMAINS',
-        'localhost:3000, spa-starter-vue2.gruneasia2.info/, spa-starter-vue2.gruneasia2.info'
+        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,spa-starter-vue2.gruneasia2.info/,spa-starter-vue2.gruneasia2.info,::1'
     )),
 
     /*

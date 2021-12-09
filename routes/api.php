@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
+// ---------------------------------------------------------------------
+// Route for Mobile (Flutter Starter-Kit)
+// ---------------------------------------------------------------------
+Route::post('/sanctum/token', 'Auth\MobileLoginController@makeToken');
+// ---------------------------------------------------------------------
+
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
@@ -39,7 +45,14 @@ Route::post('/{guard}/login', 'Auth\LoginController@login');
 Route::get('/{guard}/logout', 'Auth\LoginController@logout');
 
 
-Route::middleware(['auth:web,admin'])->group(function () {
+Route::middleware(['auth:web,admin,sanctum'])->group(function () {
+
+    // ---------------------------------------------------------------------
+    // Route for Mobile (Flutter Starter-Kit)
+    // ---------------------------------------------------------------------
+    Route::get('/user/revoke', 'Auth\MobileLoginController@revokeToken');
+    // ---------------------------------------------------------------------
+
     Route::get('/users', 'Api\UserController@getAll');
     Route::get('/users/create', 'Api\UserController@create');
     Route::post('/users', 'Api\UserController@store');

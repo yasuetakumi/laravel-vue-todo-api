@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\DummyMeeting;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use stdClass;
@@ -12,7 +13,7 @@ class DummyMeetingController extends Controller {
     public function getAll(Request $request) {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
-        $meetings = DummyMeeting::query();
+        $meetings = DummyMeeting::query()->with('registrant');
         $meetings = $this->filter($meetings, $params);
         $meetings = $this->sort($meetings, $params['sortBy'], $params['sortDesc'], false);
         $meetings = $this->finalize($meetings, $perPage);
@@ -93,14 +94,20 @@ class DummyMeetingController extends Controller {
         if(isset($params['customer'])){
             $meetings->where('customer', $params['customer']);
         }
-        if( array_key_exists('attendee', $params) && is_numeric($params['attendee'])){
-            $meetings->where('attendee', $params['attendee']);
+        if( array_key_exists('location', $params) && is_numeric($params['location'])){
+            $meetings->where('location', $params['location']);
         }
         if(isset($params['meeting_date_start'])){
             $meetings->whereDate('meeting_date', '>=', $params['meeting_date_start']);
         }
         if(isset($params['meeting_date_end'])){
             $meetings->whereDate('meeting_date', '<=', $params['meeting_date_end']);
+        }
+        if(isset($params['registrant'])){
+            // $meetings->where('registrant', 'like', '%' . $params['registrant'] . '%');
+            $meetings->whereHas('registrant', function($query) use($params) {
+                $query->where('display_name', 'like', "%{$params['registrant']}%");
+            });
         }
         return $meetings;
     }
@@ -119,13 +126,22 @@ class DummyMeetingController extends Controller {
     // }
 
     private function sort($meetings, $sortBy, $sortDesc, $multiSort) {
+        // return response()->json($sortDesc, $sortBy, $multiSort);
         if ($sortDesc) {
             if ($multiSort) {
                 foreach ($sortBy as $key => $item) {
                     $meetings->orderBy($item, $sortDesc[$key] ? 'desc' : 'asc');
                 }
             } else {
-                $meetings->orderBy($sortBy, $sortDesc ? 'desc' : 'asc');
+                if ($sortBy == 'registrant.display_name') {
+                    if ($sortDesc)
+                        $meetings->orderByDesc(User::select('display_name')->whereColumn('registrant', 'users.id'));
+                    else
+                        $meetings->orderBy(User::select('display_name')->whereColumn('registrant', 'users.id'));                    
+                }
+                else {
+                    $meetings->orderBy($sortBy, $sortDesc ? 'desc' : 'asc');
+                }
             }
         }
         return $meetings;
@@ -137,7 +153,7 @@ class DummyMeetingController extends Controller {
 
     private function getFormData() {
         $data['customers'] = DummyMeeting::CUSTOMER;
-        $data['attendees'] = DummyMeeting::ATTENDEE;
+        $data['locations'] = DummyMeeting::LOCATION;
         return $data;
     }
 }

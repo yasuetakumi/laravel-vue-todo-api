@@ -10,6 +10,19 @@ use Illuminate\Validation\ValidationException;
 
 class MobileLoginController extends Controller
 {
+    /**
+     * get login user information
+     * 
+     */
+    public function loginUser(Request $request) {
+
+        return $request->user();
+    }
+
+    /**
+     * make token from mobile login request
+     * 
+     */
     public function makeToken(Request $request) {
         $request->validate([
             'email' => 'required|email',
@@ -28,6 +41,10 @@ class MobileLoginController extends Controller
         return $user->createToken($request->device_name)->plainTextToken;
     }
 
+    /**
+     * delete old token after logout request from mobile
+     * 
+     */
     public function revokeToken(Request $request) {
 
         $user = $request->user();

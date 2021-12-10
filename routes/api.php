@@ -51,6 +51,7 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     // Route for Mobile (Flutter Starter-Kit)
     // ---------------------------------------------------------------------
     Route::get('/user/revoke', 'Auth\MobileLoginController@revokeToken');
+    Route::get('/login-user', 'Auth\MobileLoginController@loginUser');
     // ---------------------------------------------------------------------
 
     Route::get('/users', 'Api\UserController@getAll');

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use stdClass;
+use App\Http\Requests\StoreUserPost;
 
 class UserController extends Controller
 {
@@ -50,7 +51,7 @@ class UserController extends Controller
         return successResponse(User::find(request('userId')));
     }
 
-    public function store(Request $request)
+    public function store(StoreUserPost $request)
     {
         $data = $request->all();
         $data['password'] = bcrypt($data['password']);
@@ -58,11 +59,13 @@ class UserController extends Controller
         return successResponse();
     }
 
-    public function update(Request $request)
+    public function update(StoreUserPost $request)
     {
         $data = $request->all();
-        if (array_key_exists('password', $data)) {
+        if (array_key_exists('password', $data) && $data['password']!==null) {
             $data['password'] = bcrypt($data['password']);
+        }else{
+            unset($data['password']);
         }
         User::where('id', request('userId'))->update($data);
         return successResponse();

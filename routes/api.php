@@ -59,6 +59,15 @@ Route::middleware(['auth:web,admin'])->group(function () {
     // --------------- //
 
 
+    Route::get('/customers', 'Api\CustomerController@getAll');
+    Route::get('/customers/create', 'Api\CustomerController@create');
+    Route::post('/customers', 'Api\CustomerController@store');
+    Route::get('/customers/{customerId}', 'Api\CustomerController@show');
+    Route::get('/customers/{customerId}/edit', 'Api\CustomerController@edit');
+    Route::post('/customers/{customerId}', 'Api\CustomerController@update');
+    Route::delete('/customers/{customerId}', 'Api\CustomerController@destroy');
+
+
 
     Route::get('/hello', function (Request $request) {
         $res = Auth::check();

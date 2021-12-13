@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DummyMeeting;
 use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use stdClass;
@@ -13,7 +14,7 @@ class DummyMeetingController extends Controller {
     public function getAll(Request $request) {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
-        $meetings = DummyMeeting::query()->with('registrant');
+        $meetings = DummyMeeting::query()->with('registrant', 'customer');
         $meetings = $this->filter($meetings, $params);
         $meetings = $this->sort($meetings, $params['sortBy'], $params['sortDesc'], false);
         $meetings = $this->finalize($meetings, $perPage);
@@ -91,7 +92,7 @@ class DummyMeetingController extends Controller {
         if(isset($params['title'])){
             $meetings->where('title', 'like', '%' . $params['title'] . '%');
         }
-        if(isset($params['customer'])){
+        if(isset($params['customer']) && $params['customer'] != 'null'){
             $meetings->where('customer', $params['customer']);
         }
         if( array_key_exists('location', $params) && is_numeric($params['location'])){
@@ -103,7 +104,7 @@ class DummyMeetingController extends Controller {
         if(isset($params['meeting_date_end'])){
             $meetings->whereDate('meeting_date', '<=', $params['meeting_date_end']);
         }
-        if(isset($params['registrant'])){
+        if(isset($params['registrant'])  && $params['registrant'] != 'null'){
             // $meetings->where('registrant', 'like', '%' . $params['registrant'] . '%');
             $meetings->whereHas('registrant', function($query) use($params) {
                 $query->where('display_name', 'like', "%{$params['registrant']}%");
@@ -134,10 +135,16 @@ class DummyMeetingController extends Controller {
                 }
             } else {
                 if ($sortBy == 'registrant.display_name') {
-                    if ($sortDesc)
+                    if ($sortDesc == 'true')
                         $meetings->orderByDesc(User::select('display_name')->whereColumn('registrant', 'users.id'));
-                    else
-                        $meetings->orderBy(User::select('display_name')->whereColumn('registrant', 'users.id'));                    
+                    else if ($sortDesc == 'false')
+                        $meetings->orderBy(User::select('display_name')->whereColumn('registrant', 'users.id'));
+                }
+                else if ($sortBy == 'customer.name') {
+                    if ($sortDesc == 'true')
+                        $meetings->orderByDesc(Customer::select('name')->whereColumn('customer', 'customers.id'));
+                    else if ($sortDesc == 'false')
+                        $meetings->orderBy(Customer::select('name')->whereColumn('customer', 'customers.id'));
                 }
                 else {
                     $meetings->orderBy($sortBy, $sortDesc ? 'desc' : 'asc');
@@ -152,7 +159,7 @@ class DummyMeetingController extends Controller {
     }
 
     private function getFormData() {
-        $data['customers'] = DummyMeeting::CUSTOMER;
+        $data['customers'] = Customer::all();
         $data['locations'] = DummyMeeting::LOCATION;
         return $data;
     }

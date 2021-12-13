@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
+use App\Models\Customer;
 
 class DummyMeeting extends Model {
     const CUSTOMER = [
@@ -32,6 +33,10 @@ class DummyMeeting extends Model {
         'registrant',
         'location_image_url',
     ];
+
+    public function customer() {
+        return $this->belongsTo(Customer::class, 'customer');
+    }
 
     public function registrant() {
         return $this->belongsTo(User::class, 'registrant');

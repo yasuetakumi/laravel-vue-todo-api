@@ -48,7 +48,7 @@ class MobileLoginController extends Controller
     public function revokeToken(Request $request) {
 
         $user = $request->user();
-        $user->token()->delete();
+        $user->tokens()->delete();
         return 'token deleted';
     }
 }

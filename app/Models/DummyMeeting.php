@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\User;
+
 class DummyMeeting extends Model {
     const CUSTOMER = [
 
@@ -17,16 +19,21 @@ class DummyMeeting extends Model {
         ['value' => 8, 'text' => 'Microsoft'],
     ];
 
-    const ATTENDEE = [
-        ['value' => 0, 'text' => 'President'],
-        ['value' => 1, 'text' => 'Vice President'],
+    const LOCATION = [
+        ['value' => 0, 'text' => 'Internal'],
+        ['value' => 1, 'text' => 'External'],
     ];
 
     protected $fillable = [
         'title',
         'customer',
-        'attendee',
+        'location',
         'meeting_date',
-        'location_image_url'
+        'registrant',
+        'location_image_url',
     ];
+
+    public function registrant() {
+        return $this->belongsTo(User::class, 'registrant');
+    }
 }

@@ -62,6 +62,10 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     Route::post('/users/{userId}', 'Api\UserController@update');
     Route::delete('/users/{userId}', 'Api\UserController@destroy');
 
+    // --- import user from CSV
+    // Route::post('/users/import', 'Api\UserController@import');
+    // --- END import user from CSV
+
     // DUMMY ROUTE //
     Route::get('/dummy-meetings', 'Api\DummyMeetingController@getAll');
     Route::get('/dummy-meetings/create', 'Api\DummyMeetingController@create');

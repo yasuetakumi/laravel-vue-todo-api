@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserRole;
+use App\Imports\UsersImport;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -117,5 +118,52 @@ class UserController extends Controller
     {
         $data['userRoles'] = UserRole::all();
         return $data;
+    }
+
+    /** 
+     * import user from CSV
+    */
+    public function import(Request $request)
+    {
+        try{
+            // Check user role
+            // for now just admin can import
+            // $user_role = Auth::user()->user_role_id;
+            // if ($user_role != 1) {
+            //     return errorResponse();
+            // }
+            
+            // Validate file
+            $rules = [
+                'file' => 'required|mimes:csv,txt'
+            ];
+              
+            $messages = [
+                // 'mimes'    => 'CSV形式ではないので取り込みできません。' // JP version
+                'mimes'    => 'Since it is not in CSV format, it cannot be imported.'
+            ];
+              
+            $request->validate($rules, $messages);
+
+            $file = $request->file('file');
+            // $file = mb_convert_encoding($file, 'UTF-8', 'EUC-JP');
+
+            $import = new UsersImport($request->type);
+            Excel::import($import, $file);
+
+            // return successResponse($import->getArrUsers());
+            // return $import->getArrUsers();
+            return 'yes';
+
+        } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
+            $failures = $e->failures();
+
+            $message = [];
+            foreach($failures as $failure){
+                array_push($message, $failure->errors());
+            }
+            return $message;
+            // return errorResponse($message);
+        }
     }
 }

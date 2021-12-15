@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use stdClass;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -123,47 +124,34 @@ class UserController extends Controller
     /** 
      * import user from CSV
     */
-    public function import(Request $request)
+    public function importCsv(Request $request)
     {
         try{
-            // Check user role
-            // for now just admin can import
-            // $user_role = Auth::user()->user_role_id;
-            // if ($user_role != 1) {
-            //     return errorResponse();
-            // }
-            
-            // Validate file
+            // --- Validate file
             $rules = [
                 'file' => 'required|mimes:csv,txt'
             ];
-              
             $messages = [
-                // 'mimes'    => 'CSV形式ではないので取り込みできません。' // JP version
-                'mimes'    => 'Since it is not in CSV format, it cannot be imported.'
-            ];
-              
+                'mimes'    => 'Since it is not in CSV format, it cannot be imported.' // EN version
+            ];              
             $request->validate($rules, $messages);
+            // --- END Validate file
 
+            // --- import data
             $file = $request->file('file');
-            // $file = mb_convert_encoding($file, 'UTF-8', 'EUC-JP');
-
             $import = new UsersImport($request->type);
             Excel::import($import, $file);
+            // --- END import data
 
-            // return successResponse($import->getArrUsers());
-            // return $import->getArrUsers();
-            return 'yes';
+            return successResponse($import->getArrUsers());
 
         } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
             $failures = $e->failures();
-
-            $message = [];
+            $messages = [];
             foreach($failures as $failure){
-                array_push($message, $failure->errors());
+                array_push($messages, $failure->errors());
             }
-            return $message;
-            // return errorResponse($message);
+            return errorResponse();
         }
     }
 }

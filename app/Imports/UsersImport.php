@@ -3,6 +3,8 @@
 namespace App\Imports;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -17,7 +19,16 @@ class UsersImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings
     */
     protected $type;
 
+    /**
+     * Array that contains users->id
+     * if success store
+     */
     private $arrImportUsers = [];
+
+    /**
+     * the number of rows in csv
+     */
+    private $csvLength = 0;
     
     /** 
      * error message container
@@ -44,7 +55,7 @@ class UsersImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings
     */
     public $columns = [ 
         'id'                => 'id',
-        'user_role_d'       => 'user_role_id',
+        'user_role_id'      => 'user_role_id',
         'display_name'      => 'display_name',
         'email'             => 'email',
         'email_verified_at' => 'email_verified_at',
@@ -57,13 +68,22 @@ class UsersImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings
         $this->type = $type;
     }
 
+    /**
+     *  We not using laravel excel rule because some laravel validation not working with this function
+     *  Using Laravel validation instead
+     */
+    public function rules(): array
+    {
+        return [];
+    }
+
     private function validator($data, $index){
         $arrValidator = [
             'id'                => 'nullable|integer|exists:users,id',
-            'user_role_d'       => 'required_without:id',
+            'user_role_id'      => 'required_without:id',
             'display_name'      => 'required_without:id|max:255',
             'email'             => 'required_without:id|email|max:255',
-            'email_verified_at' => 'required_without:id|date',
+            'email_verified_at' => 'nullable|date',
             'password'          => 'required_without:id|min:8|max:30' // for now max 30
         ];
 
@@ -80,79 +100,72 @@ class UsersImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings
     public function collection(Collection $rows)
     {
         // check email in csv is all unique
-        $this->check_email_csv($rows);
+        $this->checEmailCsv($rows);
         // check is error in prepareForValidation
         if(count($this->err_msg) > 0) {
             throw ValidationException::withMessages([
                 "errors" => $this->err_msg,
             ]);
         }
+        // reset err_msg
+        $this->err_msg = [];
+        // set csvLength
+        $this->csvLength = count($rows);
 
         $this->arrImportUsers = [];
         foreach($rows as $indexs => $row){
             $this->validator($row->toArray(), $indexs + 1)->validate();
             $arrayInsert = [];
             $index = 1;
-            foreach($row as $key=>$data){
+            foreach($row as $key => $data){
                 if(array_key_exists($key, $this->columns)){
-                    /**
-                     * If Update, null field included
-                     * Else (create), null field not included 
-                     */
-                    if(isset($row['id'])){
-                        if(!empty($row['id'])){
-                            /**
-                             * If password field, encrypt it first
-                             * Else insert normaly
-                             */
-                            if($key == "password"){
-                                $arrayInsert[$this->columns[$key]] = bcrypt($data);
-                            }else{
-                                $arrayInsert[$this->columns[$key]] = $data;
-                            }
-                        }
+                    // if password field, encrypt it first
+                    // else insert normaly
+                    if($key == "password"){
+                        $arrayInsert[$this->columns[$key]] = bcrypt($data);
                     }else{
-                        if(!is_null($data)){
-                            /**
-                             * If password field, encrypt it first
-                             * Else insert normaly
-                             */
-                            if($key == "password"){
-                                $arrayInsert[$this->columns[$key]] = bcrypt($data);
-                            }else{
-                                $arrayInsert[$this->columns[$key]] = $data;
-                            }
-                        }
+                        $arrayInsert[$this->columns[$key]] = $data;
                     }
                 }else{
                     $this->throwError(true, $index, $key, null, true);
                 }
                 $index++;
             }
+
+            // check is error
+            if(count($this->err_msg) > 0) {
+                throw ValidationException::withMessages([
+                    "errors" => $this->err_msg,
+                ]);
+            }
             
-            // User Update
+            // check if column id is exist
+            // if id column does not exist create new
             if(isset($row['id'])){
+                // check if column id not empty
+                // if empty create new
                 if(!empty($row['id'])){
                     $type = "update";
                     User::find($row['id'])->update($arrayInsert);
 
-                }else{
-                    // User Create
+                }
+                else{
                     $type = "create";
-                    $User = User::create($arrayInsert);
+                    $user = User::create($arrayInsert);
                 }
             }else{
-                // User Create
                 $type = "create";
-                $User = User::create($arrayInsert);
+                $user = User::create($arrayInsert);
             }
 
+            // if success, add data to resultData
             $this->resultData[$indexs] = [
-                "data"  => $User,
+                "data"  => $user,
                 "type"  => $type
             ];
 
-            $this->arrImportUsers[] = $User->id;
+            // if success, add user id to arrImportUsers
+            $this->arrImportUsers[] = $user->id;
         }
     }
 
@@ -162,7 +175,7 @@ class UsersImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings
          * Set maximum row that can be import is 50
          * The $index - 1 because index is include with header
          */
-        $maximum_row_imported = 1;
+        $maximum_row_imported = 100;
         if(($index - 1) > $maximum_row_imported){
             throw ValidationException::withMessages(["errors" => "You can only import up to ".$maximum_row_imported]);
         }
@@ -300,7 +313,7 @@ class UsersImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings
     /** 
      * check is all email in csv is unique
     */
-    public function check_email_csv($rows)
+    public function checEmailCsv($rows)
     {   
         $emails = [];
         foreach($rows as $indexs => $row){

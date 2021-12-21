@@ -82,7 +82,7 @@ class UserController extends Controller
 
     private function filter($meetings, $params)
     {
-        if (array_key_exists('userRole', $params) && $params['userRole'] != 'undefined') {
+        if (array_key_exists('userRole', $params) && $params['userRole'] >= 1) {
             $meetings->where('user_role_id', $params['userRole']);
         }
         if (array_key_exists('name', $params)) {

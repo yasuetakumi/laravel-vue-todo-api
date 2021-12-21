@@ -72,10 +72,15 @@ class UserController extends Controller
     {
         try {
             if (Auth::user()->id == $request->userId) {
-                throw new Exception('Cannot delete self account');
+                //throw new Exception('Cannot delete self account');
+                throw new Exception('Error Http 500', 500);
             }
             return successResponse(User::destroy($request->userId), "Successfully delete user");
         } catch (Exception $e) {
+            // IF HTTP ERROR 500, send notification via mail and chatwork bot
+            if($e->getCode() == 500){
+                sendError($e->getMessage());
+            }
             return errorResponse($e->getMessage());
         }
     }

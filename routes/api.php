@@ -58,6 +58,9 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     Route::get('/users/downloadCSV', 'Api\UserController@downloadCSV');
     Route::get('/users/create', 'Api\UserController@create');
     Route::post('/users', 'Api\UserController@store');
+    // --- import user from CSV
+    Route::post('/users/import-csv', 'Api\UserController@importCsv');
+    // --- END import user from CSV
     Route::get('/users/{userId}', 'Api\UserController@show');
     Route::get('/users/{userId}/edit', 'Api\UserController@edit');
     Route::post('/users/{userId}', 'Api\UserController@update');

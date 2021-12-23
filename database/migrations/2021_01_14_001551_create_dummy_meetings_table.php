@@ -14,9 +14,16 @@ class CreateDummyMeetingsTable extends Migration {
         Schema::create('dummy_meetings', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('title', 255);
-            $table->bigInteger('customer');
+
+            $table->unsignedBigInteger('customer')->nullable();
+            $table->foreign('customer')->references('id')->on('customers')->onUpdate('cascade')->onDelete('set null');
+
             $table->date('meeting_date');
-            $table->bigInteger('attendee');
+            $table->bigInteger('location');
+
+            $table->unsignedBigInteger('registrant')->nullable();
+            $table->foreign('registrant')->references('id')->on('users')->onUpdate('cascade')->onDelete('set null');
+
             $table->string('location_image_url', 255)->nullable();
             $table->timestamps();
         });

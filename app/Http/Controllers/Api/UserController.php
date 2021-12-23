@@ -63,7 +63,8 @@ class UserController extends Controller
     {
         $data = $request->all();
         $data['password'] = bcrypt($data['password']);
-        User::insert($data);
+        $data['user_role_id'] = 2;
+        User::create($data);
         return successResponse();
     }
 

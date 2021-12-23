@@ -55,6 +55,7 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     // ---------------------------------------------------------------------
 
     Route::get('/users', 'Api\UserController@getAll');
+    Route::get('/users/downloadCSV', 'Api\UserController@downloadCSV');
     Route::get('/users/create', 'Api\UserController@create');
     Route::post('/users', 'Api\UserController@store');
     Route::get('/users/{userId}', 'Api\UserController@show');

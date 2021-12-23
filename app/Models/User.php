@@ -13,7 +13,7 @@ class User extends Authenticatable
     use Notifiable, SoftDeletes, HasApiTokens;
 
     protected $fillable = [
-        'display_name', 'email', 'password',
+        'display_name', 'email', 'password', 'user_role_id'
     ];
 
     protected $hidden = [

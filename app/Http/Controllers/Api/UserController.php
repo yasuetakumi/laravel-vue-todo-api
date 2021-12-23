@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserRole;
+use App\Imports\UsersImport;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 use App\Http\Requests\StoreUserPost;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -158,5 +160,38 @@ class UserController extends Controller
         $data = response()->download($filename, 'user_list.csv', $headers);
 
         return $data;
+    }
+    /** 
+     * import user from CSV
+    */
+    public function importCsv(Request $request)
+    {
+        try{
+            // --- Validate file
+            $rules = [
+                'file' => 'required|mimes:csv,txt'
+            ];
+            $messages = [
+                'mimes'    => 'Since it is not in CSV format, it cannot be imported.' // EN version
+            ];              
+            $request->validate($rules, $messages);
+            // --- END Validate file
+
+            // --- import data
+            $file = $request->file('file');
+            $import = new UsersImport($request->type);
+            Excel::import($import, $file);
+            // --- END import data
+
+            return successResponse($import->getArrUsers());
+
+        } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
+            $failures = $e->failures();
+            $messages = [];
+            foreach($failures as $failure){
+                array_push($messages, $failure->errors());
+            }
+            return errorResponse();
+        }
     }
 }

@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use stdClass;
+use Exception;
 use App\Models\User;
 use App\Models\UserRole;
 use App\Imports\UsersImport;
-use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use stdClass;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserPost;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
@@ -144,7 +145,13 @@ class UserController extends Controller
         $users = $this->filter($users, $params);
         $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
 
-        $filename = public_path("user_list.csv");
+        //create directory if not availble
+        $directory = public_path() . '/csv';
+        if(!File::exists($directory)){
+            File::makeDirectory($directory);
+        }
+
+        $filename = public_path("/csv/user_list.csv"); //save to public/csv
         $handle = fopen($filename, 'w+');
         fputcsv($handle, array('id', 'user_roles.label', 'display_name', 'email'));
 
@@ -162,7 +169,7 @@ class UserController extends Controller
 
         return $data;
     }
-    /** 
+    /**
      * import user from CSV
     */
     public function importCsv(Request $request)
@@ -174,7 +181,7 @@ class UserController extends Controller
             ];
             $messages = [
                 'mimes'    => 'Since it is not in CSV format, it cannot be imported.' // EN version
-            ];              
+            ];
             $request->validate($rules, $messages);
             // --- END Validate file
 

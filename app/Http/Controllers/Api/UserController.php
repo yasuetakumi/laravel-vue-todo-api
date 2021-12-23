@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserRole;
+use App\Imports\UsersImport;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use stdClass;
+use App\Http\Requests\StoreUserPost;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -17,7 +20,12 @@ class UserController extends Controller
     {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
-        $users = User::query();
+        $users = User::select([
+            'users.*',
+            'user_roles.label as role_label'
+        ]);
+        $users->join('user_roles', 'user_roles.id', '=', 'users.user_role_id');
+
         $users = $this->filter($users, $params);
         $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
         $users = $this->finalize($users, $perPage);
@@ -25,6 +33,7 @@ class UserController extends Controller
         $data = new stdClass();
         $data->users = $users;
         $data->formData = $this->getFormData();
+
         return successResponse($data);
     }
 
@@ -50,19 +59,22 @@ class UserController extends Controller
         return successResponse(User::find(request('userId')));
     }
 
-    public function store(Request $request)
+    public function store(StoreUserPost $request)
     {
         $data = $request->all();
         $data['password'] = bcrypt($data['password']);
-        User::insert($data);
+        $data['user_role_id'] = 2;
+        User::create($data);
         return successResponse();
     }
 
-    public function update(Request $request)
+    public function update(StoreUserPost $request)
     {
         $data = $request->all();
-        if (array_key_exists('password', $data)) {
+        if (array_key_exists('password', $data) && $data['password']!==null) {
             $data['password'] = bcrypt($data['password']);
+        }else{
+            unset($data['password']);
         }
         User::where('id', request('userId'))->update($data);
         return successResponse();
@@ -85,18 +97,18 @@ class UserController extends Controller
         }
     }
 
-    private function filter($meetings, $params)
+    private function filter($users, $params)
     {
         if (array_key_exists('userRole', $params) && $params['userRole'] != 'undefined') {
-            $meetings->where('user_role_id', $params['userRole']);
+            $users->where('user_role_id', $params['userRole']);
         }
         if (array_key_exists('name', $params)) {
-            $meetings->where('display_name', 'like', '%' . $params['name'] . '%');
+            $users->where('display_name', 'like', '%' . $params['name'] . '%');
         }
         if (array_key_exists('email', $params)) {
-            $meetings->where('email', 'like', '%' . $params['email'] . '%');
+            $users->where('email', 'like', '%' . $params['email'] . '%');
         }
-        return $meetings;
+        return $users;
     }
 
     private function sort($users, $sortBy, $sortDesc, $multiSort)
@@ -104,10 +116,10 @@ class UserController extends Controller
         if ($sortDesc) {
             if ($multiSort) {
                 foreach ($sortBy as $key => $item) {
-                    $users->orderBy($item, $sortDesc[$key] ? 'desc' : 'asc');
+                    $users->orderBy($item, $sortDesc[$key]=='true' ? 'desc' : 'asc');
                 }
             } else {
-                $users->orderBy($sortBy, $sortDesc ? 'desc' : 'asc');
+                $users->orderBy($sortBy, $sortDesc=='true' ? 'desc' : 'asc');
             }
         }
         return $users;
@@ -122,5 +134,70 @@ class UserController extends Controller
     {
         $data['userRoles'] = UserRole::all();
         return $data;
+    }
+
+    public function downloadCSV(Request $request)
+    {
+        $params = $request->all();
+        $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
+        $users = User::select([
+            'users.*',
+            'user_roles.label as role_label'
+        ]);
+        $users->join('user_roles', 'user_roles.id', '=', 'users.user_role_id');
+
+        $users = $this->filter($users, $params);
+        $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
+
+        $filename = public_path("user_list.csv");
+        $handle = fopen($filename, 'w+');
+        fputcsv($handle, array('id', 'user_roles.label', 'display_name', 'email'));
+
+        foreach($users->get() as $row) {
+            fputcsv($handle, array($row['id'], $row['role_label'], $row['display_name'], $row['email']));
+        }
+
+        fclose($handle);
+
+        $headers = array(
+            'Content-Type' => 'text/csv',
+        );
+
+        $data = response()->download($filename, 'user_list.csv', $headers);
+
+        return $data;
+    }
+    /** 
+     * import user from CSV
+    */
+    public function importCsv(Request $request)
+    {
+        try{
+            // --- Validate file
+            $rules = [
+                'file' => 'required|mimes:csv,txt'
+            ];
+            $messages = [
+                'mimes'    => 'Since it is not in CSV format, it cannot be imported.' // EN version
+            ];              
+            $request->validate($rules, $messages);
+            // --- END Validate file
+
+            // --- import data
+            $file = $request->file('file');
+            $import = new UsersImport($request->type);
+            Excel::import($import, $file);
+            // --- END import data
+
+            return successResponse($import->getArrUsers());
+
+        } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
+            $failures = $e->failures();
+            $messages = [];
+            foreach($failures as $failure){
+                array_push($messages, $failure->errors());
+            }
+            return errorResponse();
+        }
     }
 }

@@ -13,7 +13,7 @@ class User extends Authenticatable
     use Notifiable, SoftDeletes, HasApiTokens;
 
     protected $fillable = [
-        'display_name', 'email', 'password',
+        'display_name', 'email', 'password', 'user_role_id'
     ];
 
     protected $hidden = [
@@ -23,4 +23,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function user_role()
+    {
+        return $this->belongsTo('App\Models\UserRole', 'user_role_id');
+    }
 }

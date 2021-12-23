@@ -55,8 +55,12 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     // ---------------------------------------------------------------------
 
     Route::get('/users', 'Api\UserController@getAll');
+    Route::get('/users/downloadCSV', 'Api\UserController@downloadCSV');
     Route::get('/users/create', 'Api\UserController@create');
     Route::post('/users', 'Api\UserController@store');
+    // --- import user from CSV
+    Route::post('/users/import-csv', 'Api\UserController@importCsv');
+    // --- END import user from CSV
     Route::get('/users/{userId}', 'Api\UserController@show');
     Route::get('/users/{userId}/edit', 'Api\UserController@edit');
     Route::post('/users/{userId}', 'Api\UserController@update');
@@ -71,6 +75,15 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     Route::post('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@update');
     Route::delete('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@destroy');
     // --------------- //
+
+
+    Route::get('/customers', 'Api\CustomerController@getAll');
+    Route::get('/customers/create', 'Api\CustomerController@create');
+    Route::post('/customers', 'Api\CustomerController@store');
+    Route::get('/customers/{customerId}', 'Api\CustomerController@show');
+    Route::get('/customers/{customerId}/edit', 'Api\CustomerController@edit');
+    Route::post('/customers/{customerId}', 'Api\CustomerController@update');
+    Route::delete('/customers/{customerId}', 'Api\CustomerController@destroy');
 
 
 

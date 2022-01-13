@@ -1,5 +1,8 @@
 <?php
 
+use App\Mail\ReportMail;
+use Illuminate\Support\Facades\Mail;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -10,7 +13,11 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
-
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::get('/report', function () {
+    $message = "this is error message example";
+    return sendError($message);
 });

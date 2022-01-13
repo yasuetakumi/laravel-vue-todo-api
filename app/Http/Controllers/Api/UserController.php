@@ -155,13 +155,22 @@ class UserController extends Controller
         if(!File::exists($directory)){
             File::makeDirectory($directory);
         }
+        $convert_csv = config('csv.convert');
 
         $filename = public_path("/csv/user_list.csv"); //save to public/csv
         $handle = fopen($filename, 'w+');
         fputcsv($handle, array('id', 'user_roles.label', 'display_name', 'email'));
 
         foreach($users->get() as $row) {
-            fputcsv($handle, array($row['id'], $row['role_label'], $row['display_name'], $row['email']));
+            $id = mb_convert_encoding($row['id'], "SJIS", "UTF-8");
+            $role_label = mb_convert_encoding($row['role_label'], "SJIS", "UTF-8");
+            $display_name = mb_convert_encoding($row['display_name'], "SJIS", "UTF-8");
+            $email = mb_convert_encoding($row['email'], "SJIS", "UTF-8");
+            if($convert_csv == "on"){
+                fputcsv($handle, array($row['id'], $row['role_label'], $row['display_name'], $row['email']));
+            } else {
+                fputcsv($handle, array($id, $role_label, $display_name, $email));
+            }
         }
 
         fclose($handle);

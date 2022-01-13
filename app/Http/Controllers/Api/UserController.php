@@ -99,7 +99,7 @@ class UserController extends Controller
 
     private function filter($users, $params)
     {
-        if (array_key_exists('userRole', $params) && $params['userRole'] != 'undefined') {
+        if (array_key_exists('userRole', $params) && $params['userRole'] >= 1) {
             $users->where('user_role_id', $params['userRole']);
         }
         if (array_key_exists('name', $params)) {
@@ -167,7 +167,7 @@ class UserController extends Controller
 
         return $data;
     }
-    /** 
+    /**
      * import user from CSV
     */
     public function importCsv(Request $request)
@@ -179,7 +179,7 @@ class UserController extends Controller
             ];
             $messages = [
                 'mimes'    => 'Since it is not in CSV format, it cannot be imported.' // EN version
-            ];              
+            ];
             $request->validate($rules, $messages);
             // --- END Validate file
 

@@ -24,8 +24,17 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'user_role_name'
+    ];
+
     public function user_role()
     {
         return $this->belongsTo('App\Models\UserRole', 'user_role_id');
+    }
+
+    public function getUserRoleNameAttribute()
+    {
+        return $this->user_role->label;
     }
 }

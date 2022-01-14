@@ -21,11 +21,7 @@ class UserController extends Controller
     {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
-        $users = User::select([
-            'users.*',
-            'user_roles.label as role_label'
-        ]);
-        $users->join('user_roles', 'user_roles.id', '=', 'users.user_role_id');
+        $users = User::with('user_role');
 
         $users = $this->filter($users, $params);
         $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
@@ -100,13 +96,13 @@ class UserController extends Controller
 
     private function filter($users, $params)
     {
-        if (array_key_exists('userRole', $params) && $params['userRole'] >= 1) {
+        if (array_key_exists('userRole', $params) && !empty($params['userRole']) && $params['userRole'] != 'null') {
             $users->where('user_role_id', $params['userRole']);
         }
-        if (array_key_exists('name', $params)) {
+        if (array_key_exists('name', $params) && !empty($params['name']) && $params['name'] != 'null') {
             $users->where('display_name', 'like', '%' . $params['name'] . '%');
         }
-        if (array_key_exists('email', $params)) {
+        if (array_key_exists('email', $params) && !empty($params['email']) && $params['email'] != 'null') {
             $users->where('email', 'like', '%' . $params['email'] . '%');
         }
         return $users;

@@ -110,14 +110,16 @@ class UserController extends Controller
 
     private function sort($users, $sortBy, $sortDesc, $multiSort)
     {
-        if ($sortDesc) {
+        if ($sortBy) {
             if ($multiSort) {
-                foreach ($sortBy as $key => $item) {
-                    $users->orderBy($item, $sortDesc[$key]=='true' ? 'desc' : 'asc');
+                foreach($sortBy  as $key => $item){
+                    $users->orderBy($item, $sortDesc[$key] === 'true' ? 'desc' : 'asc');
                 }
             } else {
-                $users->orderBy($sortBy, $sortDesc=='true' ? 'desc' : 'asc');
+                $users->orderBy($sortBy, $sortDesc === 'true' ? 'desc' : 'asc');
             }
+        }else{
+            $users->orderByDesc('created_at');
         }
         return $users;
     }

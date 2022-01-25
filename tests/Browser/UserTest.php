@@ -26,24 +26,6 @@ class UserTest extends DuskTestCase
     }
 
     /**
-     * Function to test visit User list page.
-     */
-    // public function testVisitUserList()
-    // {
-    //     $user_count = User::count();
-    //     $user_name = 'test name'.($user_count - 1);
-
-    //     $this->browse(function (Browser $browser) use ($user_name) {
-    //         $browser->visit('/users')
-    //                 ->waitFor('.v-data-table')
-    //                 ->with('table', function ($table) use ($user_name) {
-    //                     $table->waitForText($user_name)
-    //                     ->assertSee($user_name);
-    //                 });
-    //     });
-    // }
-
-    /**
      * Function to test user create field required.
      */
     public function testUserCreateRequired()
@@ -123,5 +105,31 @@ class UserTest extends DuskTestCase
             'display_name'          => 'test name update'.$user_count,
             'email'                 => $email,
         ]);
+    }
+
+    /**
+     * Function to test user delete.
+     */
+    public function testUserDelete()
+    {
+        $user_count = User::count() - 1;
+        $user_name = 'test name update'.($user_count);
+        $email = 'test_update'.$user_count.'@test.com';
+
+        $this->browse(function (Browser $browser) use ($user_name, $user_count, $email) {
+            $browser->visit('/users')
+                    ->waitFor('.v-data-table')
+                    ->with('table', function ($table) use ($user_name) {
+                        $table->waitForText($user_name)
+                        ->assertSee($user_name)
+                        ->press('#delete');
+                    })
+                    ->waitFor('.v-dialog--active')
+                    ->pause(3000)
+                    ->screenshot(Carbon::now()->format('Y-m-d') . '_USER_DELETE_CONFIRMATION')
+                    ->press('.success--text')
+                    ->waitFor('.success')
+                    ->screenshot(Carbon::now()->format('Y-m-d') . '_USER_DELETE_SUBMIT');
+        });
     }
 }

@@ -29,7 +29,13 @@ class UserController extends Controller
 
         $users = $this->filter($users, $params);
         $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
-        $users = $this->finalize($users, $perPage);
+
+        // Don't paginate the result if the request come from mobile (flutter)
+        // Because in flutter used Paginated Data Table that has own pagination and sorting function
+        if (array_key_exists('paginated', $params) && $params['paginated'] == 'false')
+            $users = $users->get();
+        else
+            $users = $this->finalize($users, $perPage);
 
         $data = new stdClass();
         $data->users = $users;

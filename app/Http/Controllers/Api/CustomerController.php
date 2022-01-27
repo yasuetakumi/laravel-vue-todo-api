@@ -84,6 +84,15 @@ class CustomerController extends Controller {
         if (array_key_exists('name', $params)) {
             $meetings->where('name', 'like', '%' . $params['name'] . '%');
         }
+        if (array_key_exists('email', $params)) {
+            $meetings->where('email', 'like', '%' . $params['email'] . '%');
+        }
+        if (array_key_exists('phone', $params)) {
+            $meetings->where('phone', 'like', '%' . $params['phone'] . '%');
+        }
+        if (array_key_exists('website', $params)) {
+            $meetings->where('website', 'like', '%' . $params['website'] . '%');
+        }
         // ---------------------------------------------------------------------
 
         // ---------------------------------------------------------------------

@@ -21,11 +21,7 @@ class UserController extends Controller
     {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
-        $users = User::select([
-            'users.*',
-            'user_roles.label as role_label'
-        ]);
-        $users->join('user_roles', 'user_roles.id', '=', 'users.user_role_id');
+        $users = User::with('user_role');
 
         $users = $this->filter($users, $params);
         $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
@@ -106,13 +102,13 @@ class UserController extends Controller
 
     private function filter($users, $params)
     {
-        if (array_key_exists('userRole', $params) && $params['userRole'] >= 1) {
+        if (array_key_exists('userRole', $params) && !empty($params['userRole']) && $params['userRole'] != 'null') {
             $users->where('user_role_id', $params['userRole']);
         }
-        if (array_key_exists('name', $params)) {
+        if (array_key_exists('name', $params) && !empty($params['name']) && $params['name'] != 'null') {
             $users->where('display_name', 'like', '%' . $params['name'] . '%');
         }
-        if (array_key_exists('email', $params)) {
+        if (array_key_exists('email', $params) && !empty($params['email']) && $params['email'] != 'null') {
             $users->where('email', 'like', '%' . $params['email'] . '%');
         }
         return $users;
@@ -122,11 +118,11 @@ class UserController extends Controller
     {
         if ($sortBy) {
             if ($multiSort) {
-                foreach ($sortBy as $key => $item) {
-                    $users->orderBy($item, $sortDesc[$key]=='true' ? 'desc' : 'asc');
+                foreach($sortBy  as $key => $item){
+                    $users->orderBy($item, $sortDesc[$key] === 'true' ? 'desc' : 'asc');
                 }
             } else {
-                $users->orderBy($sortBy, $sortDesc=='true' ? 'desc' : 'asc');
+                $users->orderBy($sortBy, $sortDesc === 'true' ? 'desc' : 'asc');
             }
         }else{
             $users->orderByDesc('created_at');
@@ -167,17 +163,35 @@ class UserController extends Controller
 
         $filename = public_path("/csv/user_list.csv"); //save to public/csv
         $handle = fopen($filename, 'w+');
-        fputcsv($handle, array('id', 'user_roles.label', 'display_name', 'email'));
+        fputcsv($handle, array('id', 'user_role_id', 'display_name', 'email', 'email_verified_at', 'password', 'create_at', 'update_at'));
 
         foreach($users->get() as $row) {
-            $id = mb_convert_encoding($row['id'], "SJIS", "UTF-8");
-            $role_label = mb_convert_encoding($row['role_label'], "SJIS", "UTF-8");
+            // $id = mb_convert_encoding($row['id'], "SJIS", "UTF-8");
+            $user_role_id = mb_convert_encoding($row['user_role_id'], "SJIS", "UTF-8");
             $display_name = mb_convert_encoding($row['display_name'], "SJIS", "UTF-8");
             $email = mb_convert_encoding($row['email'], "SJIS", "UTF-8");
             if($convert_csv == "on"){
-                fputcsv($handle, array($row['id'], $row['role_label'], $row['display_name'], $row['email']));
+                fputcsv($handle, array(
+                    null,
+                    $row['user_role_id'],
+                    $row['display_name'],
+                    $row['email'],
+                    $row['email_verified_at'],
+                    $row['password'],
+                    $row['created_at'],
+                    $row['updated_at'],
+                ));
             } else {
-                fputcsv($handle, array($id, $role_label, $display_name, $email));
+                fputcsv($handle, array(
+                    null,
+                    $user_role_id,
+                    $display_name,
+                    $email,
+                    $row['email_verified_at'],
+                    $row['password'],
+                    $row['created_at'],
+                    $row['updated_at'],
+                ));
             }
         }
 

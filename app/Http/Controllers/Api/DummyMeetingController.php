@@ -161,6 +161,7 @@ class DummyMeetingController extends Controller {
     private function getFormData() {
         $data['customers'] = Customer::all();
         $data['locations'] = DummyMeeting::LOCATION;
+        $data['registrants'] = User::select('id', 'display_name', 'user_role_id')->get();
         return $data;
     }
 }

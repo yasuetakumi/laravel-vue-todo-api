@@ -67,13 +67,21 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     Route::delete('/users/{userId}', 'Api\UserController@destroy');
 
     // DUMMY ROUTE //
-    Route::get('/dummy-meetings', 'Api\DummyMeetingController@getAll');
-    Route::get('/dummy-meetings/create', 'Api\DummyMeetingController@create');
-    Route::post('/dummy-meetings', 'Api\DummyMeetingController@store');
-    Route::get('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@show');
-    Route::get('/dummy-meetings/{meetingId}/edit', 'Api\DummyMeetingController@edit');
-    Route::post('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@update');
-    Route::delete('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@destroy');
+    // Route::get('/dummy-meetings', 'Api\DummyMeetingController@getAll');
+    // Route::get('/dummy-meetings/create', 'Api\DummyMeetingController@create');
+    // Route::post('/dummy-meetings', 'Api\DummyMeetingController@store');
+    // Route::get('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@show');
+    // Route::get('/dummy-meetings/{meetingId}/edit', 'Api\DummyMeetingController@edit');
+    // Route::post('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@update');
+    // Route::delete('/dummy-meetings/{meetingId}', 'Api\DummyMeetingController@destroy');
+    // meetings route
+    Route::get('/meetings', 'Api\DummyMeetingController@getAll');
+    Route::get('/meetings/create', 'Api\DummyMeetingController@create');
+    Route::post('/meetings', 'Api\DummyMeetingController@store');
+    Route::get('/meetings/{meetingId}', 'Api\DummyMeetingController@show');
+    Route::get('/meetings/{meetingId}/edit', 'Api\DummyMeetingController@edit');
+    Route::post('/meetings/{meetingId}', 'Api\DummyMeetingController@update');
+    Route::delete('/meetings/{meetingId}', 'Api\DummyMeetingController@destroy');
     // --------------- //
 
 

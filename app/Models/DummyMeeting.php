@@ -25,6 +25,9 @@ class DummyMeeting extends Model {
         ['value' => 1, 'text' => 'External'],
     ];
 
+    // change name table from dummy_meetings to meetings
+    protected $table = 'meetings';
+
     protected $fillable = [
         'title',
         'customer',

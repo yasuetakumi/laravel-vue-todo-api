@@ -21,7 +21,10 @@ class UserController extends Controller
     {
         $params = $request->all();
         $perPage = empty($params['itemsPerPage']) ? 10 : (int) $params['itemsPerPage'];
-        $users = User::with('user_role');
+        // using 'join' because in order to be able to use user_roles.label as sort
+        $users = User::join('user_roles', 'user_roles.id', '=', 'users.user_role_id')
+            ->select('users.*', 'user_roles.label')
+            ->with('user_role');
 
         $users = $this->filter($users, $params);
         $users = $this->sort($users, $params['sortBy'], $params['sortDesc'], false);
@@ -116,6 +119,12 @@ class UserController extends Controller
 
     private function sort($users, $sortBy, $sortDesc, $multiSort)
     {
+        // --- if sortBy == user_role_name
+        if ($sortBy == 'user_role_name') {
+            $sortBy = 'user_roles.label';
+        }
+        // --- END if sortBy == user_role_name
+
         if ($sortBy) {
             if ($multiSort) {
                 foreach($sortBy  as $key => $item){
@@ -125,7 +134,7 @@ class UserController extends Controller
                 $users->orderBy($sortBy, $sortDesc === 'true' ? 'desc' : 'asc');
             }
         }else{
-            $users->orderByDesc('created_at');
+            $users->orderByDesc('id');
         }
         return $users;
     }
@@ -166,13 +175,13 @@ class UserController extends Controller
         fputcsv($handle, array('id', 'user_role_id', 'display_name', 'email', 'email_verified_at', 'password', 'create_at', 'update_at'));
 
         foreach($users->get() as $row) {
-            // $id = mb_convert_encoding($row['id'], "SJIS", "UTF-8");
+            $id = mb_convert_encoding($row['id'], "SJIS", "UTF-8");
             $user_role_id = mb_convert_encoding($row['user_role_id'], "SJIS", "UTF-8");
             $display_name = mb_convert_encoding($row['display_name'], "SJIS", "UTF-8");
             $email = mb_convert_encoding($row['email'], "SJIS", "UTF-8");
             if($convert_csv == "on"){
                 fputcsv($handle, array(
-                    null,
+                    $row['id'],
                     $row['user_role_id'],
                     $row['display_name'],
                     $row['email'],
@@ -183,7 +192,7 @@ class UserController extends Controller
                 ));
             } else {
                 fputcsv($handle, array(
-                    null,
+                    $id,
                     $user_role_id,
                     $display_name,
                     $email,

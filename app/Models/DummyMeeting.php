@@ -35,6 +35,9 @@ class DummyMeeting extends Model {
         'meeting_date',
         'registrant',
         'location_image_url',
+        'postcode',
+        'address',
+        'phone'
     ];
 
     public function customer() {

@@ -28,7 +28,7 @@ class DummyMeetingController extends Controller {
     public function create() {
         $data = [];
         $data['formData'] = $this->getFormData();
-        $data['submitUrl'] = '/dummy-meetings';
+        $data['submitUrl'] = '/meetings';
         return successResponse($data);
     }
 
@@ -39,7 +39,7 @@ class DummyMeetingController extends Controller {
         $data = [];
         $data['item'] = $item;
         $data['formData'] = $this->getFormData();
-        $data['submitUrl'] = '/dummy-meetings/' . $request->meetingId;
+        $data['submitUrl'] = '/meetings/' . $request->meetingId;
         return successResponse($data);
     }
 

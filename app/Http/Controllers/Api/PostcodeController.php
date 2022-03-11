@@ -11,7 +11,14 @@ class PostcodeController extends Controller
     public function address($postcode)
     {
         $item = Postcode::where('postcode', $postcode)->first();
-        $address = $item->prefecture . $item->city . $item->local;
-        return response()->json(['status' => 200, 'address' => $address]);
+        if(!is_null($item)) {
+            $address = $item->prefecture . $item->city . $item->local;
+            $status = 200;
+        }
+        else {
+            $address = null;
+            $status = 404;
+        }
+        return response()->json(['status' => $status, 'address' => $address]);
     }
 }

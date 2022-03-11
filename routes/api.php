@@ -93,7 +93,7 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     Route::post('/customers/{customerId}', 'Api\CustomerController@update');
     Route::delete('/customers/{customerId}', 'Api\CustomerController@destroy');
 
-    Route::get('postcode/{postcode}', 'Api\PostcodeController@address')->name('v1.api.postcode');
+    Route::get('/postcode/{postcode}', 'Api\PostcodeController@address')->name('v1.api.postcode');
 
     Route::get('/hello', function (Request $request) {
         $res = Auth::check();

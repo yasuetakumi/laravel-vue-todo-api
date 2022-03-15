@@ -4,18 +4,26 @@ namespace Tests\Unit\Api;
 
 // use PHPUnit\Framework\TestCase;
 use Tests\TestCase;
-use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use UserRoleSeeder;
 use Carbon\Carbon;
+use UserRoleSeeder;
+use App\Models\User;
 
 class UserTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** 
+     * to run phpunit test :
+     * vendor/bin/phpunit
+     * 
+     * with spesific group :
+     * vendor/bin/phpunit --group userTest
+    */
+
     /**
-     * @group userTest1
+     * @group userTest
      * 
      * test get user list 
      * and check the structure of the response
@@ -73,10 +81,97 @@ class UserTest extends TestCase
     }
 
     /**
-     * @group userTest1
+     * @group userTest
+     * @group userTestList
+     * 
+     * test get user list 
+     * filter by users->user_role_id
+     * and check the structure of the response
+     */
+    public function testUserListFilterUserRoleId()
+    {
+        $this->seed(UserRoleSeeder::class);
+        $create = factory(User::class, 20)->create();
+        $user = User::find(1);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('api/users?itemsPerPage=10&page=1&sortBy=&sortDesc=&userRole=1') // test filter by userRole=1 (Administrator)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJsonFragment(
+                [
+                    'user_role_id' => '1' // check data with user_role_id = 1
+                ]
+            )
+            ->assertJsonMissing(
+                [
+                    'user_role_id' => '2' // check no data with user_role_id = 2
+                ]
+            );
+    }
+
+    /**
+     * @group userTest
+     * @group userTestList
+     * 
+     * test get user list 
+     * filter by users->display_name
+     * and check the structure of the response
+     */
+    public function testUserListFilterDisplayName()
+    {
+        $this->seed(UserRoleSeeder::class);
+        $create = factory(User::class, 20)->create();
+        $user = User::find(1);
+        $user_check = User::find(2);
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('api/users?itemsPerPage=10&page=1&sortBy=&sortDesc=&name='.$user->display_name) 
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJsonFragment(
+                [
+                    'display_name' => $user->display_name
+                ]
+            )
+            ->assertJsonMissing(
+                [
+                    'display_name' => $user_check->display_name
+                ]
+            );;
+    }
+
+    /**
+     * @group userTest
+     * @group userTestList
+     * 
+     * test get user list 
+     * filter by users->email
+     * and check the structure of the response
+     */
+    public function testUserListFilterEmail()
+    {
+        $this->seed(UserRoleSeeder::class);
+        $create = factory(User::class, 20)->create();
+        $user = User::find(1);
+        $user_check = User::find(2);
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('api/users?itemsPerPage=10&page=1&sortBy=&sortDesc=&email='.$user->email) 
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJsonFragment(
+                [
+                    'email' => $user->email
+                ]
+            )
+            ->assertJsonMissing(
+                [
+                    'email' => $user_check->email
+                ]
+            );;
+    }
+
+    /**
+     * @group userTest
      * 
      * test store user
-     * and check the structure of the response
+     * check the response
      * and check database
      */
     public function testUserIsCreatedSuccessfully() 
@@ -107,7 +202,7 @@ class UserTest extends TestCase
     }
 
     /**
-     * @group userTest1
+     * @group userTest
      * 
      * test show user in the correct state
      */
@@ -146,71 +241,67 @@ class UserTest extends TestCase
     }
 
     /**
-     * @group userTest1
+     * @group userTest
      * 
      * test update user
+     * check the response
+     * and check database
      */
-    public function testUpdateUserReturnsCorrectData() {
-        $user = User::create(
-            [
-                'first_name' => $this->faker->firstName,
-                'last_name'  => $this->faker->lastName,
-                'email'      => $this->faker->email
-            ]
-        );
-        Wallet::create(
-            [
-                'balance' => 0,
-                'user_id' => $user->id
-            ]
-        );
-            
+    public function testUserIsUpdatedSuccessfully() {
+        $this->seed(UserRoleSeeder::class);
+        $create = factory(User::class, 10)->create();
+        $user = User::first();
+
+        $now = Carbon::now()->format('Y_m_d');
         $payload = [
-            'first_name' => $this->faker->firstName,
-            'last_name'  => $this->faker->lastName,
-            'email'      => $this->faker->email
+            'email'         => 'user_test_'.$now.'@mail.com',
+            'display_name'  => 'User Test '.$now,
+            'password'      => '12345678'
         ];
             
-        $this->json('put', "api/user/$user->id", $payload)
+        $this->actingAs($user, 'sanctum')
+            ->postJson('api/users/2', $payload)
             ->assertStatus(Response::HTTP_OK)
             ->assertExactJson(
                 [
-                    'data' => [
-                        'id'         => $user->id,
-                        'first_name' => $payload['first_name'],
-                        'last_name'  => $payload['last_name'],
-                        'email'      => $payload['email'],
-                        'created_at' => (string)$user->created_at,
-                        'wallet'     => [
-                            'id'      => $user->wallet->id,
-                            'balance' => $user->wallet->balance
-                        ]
-                    ]
+                    'data' => '',
+                    'message' => 'Successfully process the request'
                 ]
             );
+        
+        unset($payload['password']);
+        $payload['id'] = 2;
+        $this->assertDatabaseHas('users', $payload);
     }
 
     /**
      * @group userTest
      * 
      * test delete user 
-     * and check the structure of the response
+     * check the response
      * and check database
      */
-    public function testUserIsDestroyed() {
-    
-        $userData = [
-            'first_name' => $this->faker->firstName,
-            'last_name'  => $this->faker->lastName,
-            'email'      => $this->faker->email
-        ];
-        $user = User::create(
-            $userData
-        );
-        
-        $this->json('delete', "api/user/$user->id")
-             ->assertNoContent();
+    public function testUserIsDestroyedSuccessfully() 
+    {
+        $this->seed(UserRoleSeeder::class);
+        $create = factory(User::class, 10)->create();
+        $user = User::first();
 
-        $this->assertDatabaseMissing('users', $userData);
+        $user_to_delete = User::find(10);
+        
+        $this->actingAs($user, 'sanctum')
+            ->deleteJson('api/users/'.$user_to_delete->id)
+            ->assertExactJson(
+                [
+                    'data' => 1, // 1 mean success delete data
+                    'message' => 'Successfully delete user'
+                ]
+            );
+
+        $user_check = [
+            'email'         => $user_to_delete->email,
+            'display_name'  => $user_to_delete->display_name
+        ];
+        $this->assertSoftDeleted('users', $user_check);
     }
 }

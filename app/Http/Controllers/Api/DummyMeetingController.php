@@ -85,6 +85,11 @@ class DummyMeetingController extends Controller {
     }
 
     public function destroy(Request $request) {
+        $meeting = DummyMeeting::find($request->meetingId);
+        if(!is_null($meeting->location_image_url)) {
+            $fileUrl = $meeting->location_image_url;
+            Storage::delete($fileUrl);
+        }
         return successResponse(DummyMeeting::destroy($request->meetingId));
     }
 

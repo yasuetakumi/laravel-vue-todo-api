@@ -8,7 +8,7 @@ use Faker\Generator as Faker;
 use App\Models\User;
 
 $factory->define(DummyMeeting::class, function (Faker $faker) {
-    // --- postcode just for test
+    // postcode just for test
     $arr_postcode = ['0600000', '0640941', '0600041', '0600042', '0640820', '0600031', '0600001', '0640821', '0600032', '0600002'];
     $arr_user = User::pluck('id');
 

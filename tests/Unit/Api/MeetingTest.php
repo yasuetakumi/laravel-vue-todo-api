@@ -5,12 +5,15 @@ namespace Tests\Unit\Api;
 use Tests\TestCase;
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use UserRoleSeeder;
 use CustomerSeeder;
 use DummyMeetingSeeder;
 use App\Models\User;
 use App\Models\DummyMeeting;
+use App\Models\Customer;
 
 class MeetingTest extends TestCase
 {
@@ -22,6 +25,12 @@ class MeetingTest extends TestCase
      * 
      * with spesific group :
      * vendor/bin/phpunit --group meetingTest
+     * 
+     * note :
+     * when you want to run tests related to image uploads,
+     * it is required to have an image file in path
+     * laravel6-spa-api-starter-kit\public\storage\uploads\dummy-img.jpg
+     * this can be changed when using the function $this->prepareFileUpload()
     */
 
     /** 
@@ -292,7 +301,7 @@ class MeetingTest extends TestCase
     }
 
     /**
-     * @group meetingTest1
+     * @group meetingTest
      * @group meetingTestList
      * 
      * test get meeting list 
@@ -332,5 +341,512 @@ class MeetingTest extends TestCase
                     'title' => $meeting_check_not_found->title,
                 ]
             );
+    }
+
+    /**
+     * @group meetingTest
+     * 
+     * test store meetings
+     * check the response
+     * and check database
+     */
+    public function testMeetingIsCreatedSuccessfullyWithoutImage() 
+    {
+        // -- get user for login
+        $user_login = $this->testUserLogin(10);
+        // -- END get user for login
+
+        $this->runSeederCustomerAndMeeting(); // --- run seeder
+
+        $now = Carbon::now()->format('Y_m_d');
+        // array for customer
+        $arr_customer = Customer::pluck('id');
+        // array for registrant (users)
+        $arr_registrant = User::pluck('id');
+        // array for location
+        $arr_location = [0, 1];
+        // array postcode just for test
+        $arr_postcode = ['0600000', '0640941', '0600041', '0600042', '0640820', '0600031', '0600001', '0640821', '0600032', '0600002'];
+        $selected_postcode = collect($arr_postcode, 1)->random();
+
+        $payload = [
+            'title' => 'Meeting '.$now,
+            'customer' => collect($arr_customer, 1)->random(),
+            'registrant' => collect($arr_registrant, 1)->random(),
+            'location' => collect($arr_location, 1)->random(),
+            'meeting_date' => Carbon::now()->addDay()->format('Y-m-d H:i'),
+            'postcode' => collect($arr_postcode, 1)->random(),
+            'address' => 'address '.$selected_postcode,
+            'phone' => '987654321',
+            'location_image_modified' => 0 // 1 if there is image data or update image, 0 if no image data
+        ];
+
+        $response = $this->actingAs($user_login, 'sanctum')
+            ->postJson('api/meetings', $payload)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertExactJson(
+                [
+                    'data' => '',
+                    'message' => 'Successfully process the request'
+                ]
+            );
+
+        unset($payload['location_image_modified']);
+        $this->assertDatabaseHas('meetings', $payload);
+    }
+
+    /**
+     * @group meetingTest
+     * 
+     * test show meeting in the correct state
+     */
+    public function testMeetingIsShownCorrectlyWithoutImage()
+    {
+        // -- get user for login
+        $user_login = $this->testUserLogin();
+        // -- END get user for login
+
+        $this->runSeederCustomerAndMeeting(); // --- run seeder
+
+        $meeting_check = DummyMeeting::find(1);
+        $response = $this->actingAs($user_login, 'sanctum')
+            ->getJson('api/meetings/'.$meeting_check->id)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertExactJson(
+                [
+                    'data' => [
+                        'address' => $meeting_check->address,
+                        'created_at' => $meeting_check->created_at->format('Y-m-d H:i:s'),
+                        'customer' => $meeting_check->customer,
+                        'id' => $meeting_check->id,
+                        'location' => $meeting_check->location,
+                        'location_image_url' => $meeting_check->location_image_url,
+                        'meeting_date' => $meeting_check->meeting_date,
+                        'phone' => $meeting_check->phone,
+                        'postcode' => $meeting_check->postcode,
+                        'registrant' => $meeting_check->registrant,
+                        'title' => $meeting_check->title,
+                        'updated_at' => $meeting_check->updated_at->format('Y-m-d H:i:s'),
+                    ],
+                    'message' => 'Successfully process the request'
+                ]
+            );
+    }
+
+    /**
+     * @group meetingTest
+     * 
+     * test update meeting
+     * check the response
+     * and check database
+     */
+    public function testMeetingIsUpdatedSuccessfullyWithoutImage() 
+    {
+        // -- get user for login
+        $user_login = $this->testUserLogin();
+        // -- END get user for login
+
+        $this->runSeederCustomerAndMeeting(); // --- run seeder
+
+        // array for customer
+        $arr_customer = Customer::pluck('id');
+        // array for registrant (users)
+        $arr_registrant = User::pluck('id');
+        // array for location
+        $arr_location = [0, 1];
+        // array postcode just for test
+        $arr_postcode = ['0600000', '0640941', '0600041', '0600042', '0640820', '0600031', '0600001', '0640821', '0600032', '0600002'];
+        $selected_postcode = collect($arr_postcode, 1)->random();
+
+        $now = Carbon::now()->format('Y_m_d');
+        $payload = [
+            'title' => 'Meeting Update '.$now,
+            'customer' => collect($arr_customer, 1)->random(),
+            'registrant' => collect($arr_registrant, 1)->random(),
+            'location' => collect($arr_location, 1)->random(),
+            'meeting_date' => Carbon::now()->addDay(5)->format('Y-m-d H:i'),
+            'postcode' => collect($arr_postcode, 1)->random(),
+            'address' => 'address '.$selected_postcode,
+            'phone' => '987654321',
+            'location_image_modified' => 0 // 1 if there is image data or update image, 0 if no image data
+        ];
+        $meeting_update = DummyMeeting::find(1);
+            
+        $this->actingAs($user_login, 'sanctum')
+            ->postJson('api/meetings/'.$meeting_update->id, $payload)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertExactJson(
+                [
+                    'data' => '',
+                    'message' => 'Successfully process the request'
+                ]
+            );
+        
+        unset($payload['location_image_modified']);
+        $payload['id'] = $meeting_update->id;
+        $this->assertDatabaseHas('meetings', $payload);
+    }
+
+    /**
+     * @group meetingTest
+     * 
+     * test delete meeting 
+     * check the response
+     * and check database
+     */
+    public function testMeetingIsDestroyedSuccessfullyWithoutImage() 
+    {
+        // -- get user for login
+        $user_login = $this->testUserLogin();
+        // -- END get user for login
+
+        $this->runSeederCustomerAndMeeting(); // --- run seeder
+
+        $meeting_to_delete = DummyMeeting::find(1);
+        $this->actingAs($user_login, 'sanctum')
+            ->deleteJson('api/meetings/'.$meeting_to_delete->id)
+            ->assertExactJson(
+                [
+                    'data' => 1, // 1 mean success delete data
+                    'message' => 'Successfully process the request'
+                ]
+            );
+
+        $meeting_check = [
+            'title' => $meeting_to_delete->title,
+            'customer' => $meeting_to_delete->customer,
+            'registrant' => $meeting_to_delete->registrant,
+            'location' => $meeting_to_delete->location,
+            'meeting_date' => $meeting_to_delete->meeting_date,
+            'postcode' => $meeting_to_delete->postcode,
+            'address' => $meeting_to_delete->address,
+            'phone' => $meeting_to_delete->phone
+        ];
+        $this->assertDatabaseMissing('meetings', $meeting_check);
+    }
+
+    /** 
+     * for help for test upload file
+    */
+    public function prepareFileUpload($path)
+    {
+        TestCase::assertFileExists($path);
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $path);
+        return new \Symfony\Component\HttpFoundation\File\UploadedFile ($path, 'dummy-img.jpg', $mime, null, null, true);
+    }
+
+    /**
+     * @group meetingTest
+     * 
+     * test store meetings
+     * check the response
+     * and check database
+     * and check image
+     */
+    public function testMeetingIsCreatedSuccessfullyWithImage() 
+    {
+        // -- get user for login
+        $user_login = $this->testUserLogin(10);
+        // -- END get user for login
+
+        $this->runSeederCustomerAndMeeting(); // --- run seeder
+
+        $now = Carbon::now()->format('Y_m_d');
+        // array for customer
+        $arr_customer = Customer::pluck('id');
+        // array for registrant (users)
+        $arr_registrant = User::pluck('id');
+        // array for location
+        $arr_location = [0, 1];
+        // array postcode just for test
+        $arr_postcode = ['0600000', '0640941', '0600041', '0600042', '0640820', '0600031', '0600001', '0640821', '0600032', '0600002'];
+        $selected_postcode = collect($arr_postcode, 1)->random();
+        
+        $payload = [
+            'title' => 'Meeting '.$now,
+            'customer' => collect($arr_customer, 1)->random(),
+            'registrant' => collect($arr_registrant, 1)->random(),
+            'location' => collect($arr_location, 1)->random(),
+            'meeting_date' => Carbon::now()->addDay()->format('Y-m-d H:i'),
+            'postcode' => collect($arr_postcode, 1)->random(),
+            'address' => 'address '.$selected_postcode,
+            'phone' => '987654321',
+            'location_image' => $this->prepareFileUpload('public/storage/uploads/dummy-img.jpg'),
+            'location_image_modified' => '1' // 1 if there is image data or update image, 0 if no image data
+        ];
+
+        $response = $this->actingAs($user_login, 'sanctum')
+            ->postJson('api/meetings', $payload)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertExactJson(
+                [
+                    'data' => '',
+                    'message' => 'Successfully process the request'
+                ]
+            );
+
+        unset($payload['location_image']);
+        unset($payload['location_image_modified']);
+        $this->assertDatabaseHas('meetings', $payload);
+        
+        // get last data created
+        $last_meeting = DummyMeeting::orderBy('id', 'desc')->first();
+        $location_image_name = explode('/', $last_meeting->location_image_url);
+        // Assert the file was stored
+        Storage::disk('public_upload')->assertExists('meetings/'.$location_image_name[1]);
+    }
+
+    /**
+     * @group meetingTest
+     * 
+     * test update meeting
+     * check the response
+     * and check database
+     * and check image
+     * 
+     * update scenario:
+     * don't have an image to have an image
+     */
+    public function testMeetingIsUpdatedSuccessfullyWithImage() 
+    {
+        // -- get user for login
+        $user_login = $this->testUserLogin();
+        // -- END get user for login
+
+        $this->runSeederCustomerAndMeeting(); // --- run seeder
+
+        // array for customer
+        $arr_customer = Customer::pluck('id');
+        // array for registrant (users)
+        $arr_registrant = User::pluck('id');
+        // array for location
+        $arr_location = [0, 1];
+        // array postcode just for test
+        $arr_postcode = ['0600000', '0640941', '0600041', '0600042', '0640820', '0600031', '0600001', '0640821', '0600032', '0600002'];
+        $selected_postcode = collect($arr_postcode, 1)->random();
+
+        $now = Carbon::now()->format('Y_m_d');
+        $payload = [
+            'title' => 'Meeting Update '.$now,
+            'customer' => collect($arr_customer, 1)->random(),
+            'registrant' => collect($arr_registrant, 1)->random(),
+            'location' => collect($arr_location, 1)->random(),
+            'meeting_date' => Carbon::now()->addDay(5)->format('Y-m-d H:i'),
+            'postcode' => collect($arr_postcode, 1)->random(),
+            'address' => 'address '.$selected_postcode,
+            'phone' => '987654321',
+            'location_image' => $this->prepareFileUpload('public/storage/uploads/dummy-img.jpg'),
+            'location_image_modified' => '1' // 1 if there is image data or update image, 0 if no image data
+        ];
+        $meeting_update = DummyMeeting::find(1);
+            
+        $this->actingAs($user_login, 'sanctum')
+            ->postJson('api/meetings/'.$meeting_update->id, $payload)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertExactJson(
+                [
+                    'data' => '',
+                    'message' => 'Successfully process the request'
+                ]
+            );
+        
+        $meeting_after_update = DummyMeeting::find(1);
+        unset($payload['location_image']);
+        unset($payload['location_image_modified']);
+        $payload['id'] = $meeting_after_update->id;
+        $this->assertDatabaseHas('meetings', $payload);
+        $location_image_name = explode('/', $meeting_after_update->location_image_url);
+        // Assert the file was stored
+        Storage::disk('public_upload')->assertExists('meetings/'.$location_image_name[1]);
+    }
+
+    /**
+     * @group meetingTest
+     * 
+     * test update meeting
+     * check the response
+     * and check database
+     * and check image
+     * 
+     * update scenario:
+     * don't have an image to have an image
+     */
+    public function testMeetingIsUpdatedSuccessfullyChangeImage() 
+    {
+        // -- get user for login
+        $user_login = $this->testUserLogin();
+        // -- END get user for login
+
+        $this->runSeederCustomerAndMeeting(); // --- run seeder
+
+        // --- for create new meetings with image
+        $now = Carbon::now()->format('Y_m_d');
+        // array for customer
+        $arr_customer = Customer::pluck('id');
+        // array for registrant (users)
+        $arr_registrant = User::pluck('id');
+        // array for location
+        $arr_location = [0, 1];
+        // array postcode just for test
+        $arr_postcode = ['0600000', '0640941', '0600041', '0600042', '0640820', '0600031', '0600001', '0640821', '0600032', '0600002'];
+        $selected_postcode = collect($arr_postcode, 1)->random();
+        
+        $payload_create = [
+            'title' => 'Meeting Create '.$now,
+            'customer' => collect($arr_customer, 1)->random(),
+            'registrant' => collect($arr_registrant, 1)->random(),
+            'location' => collect($arr_location, 1)->random(),
+            'meeting_date' => Carbon::now()->addDay()->format('Y-m-d H:i'),
+            'postcode' => collect($arr_postcode, 1)->random(),
+            'address' => 'Address Create '.$selected_postcode,
+            'phone' => '987654321',
+            'location_image' => $this->prepareFileUpload('public/storage/uploads/dummy-img.jpg'),
+            'location_image_modified' => '1' // 1 if there is image data or update image, 0 if no image data
+        ];
+
+        $response_create = $this->actingAs($user_login, 'sanctum')
+            ->postJson('api/meetings', $payload_create)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertExactJson(
+                [
+                    'data' => '',
+                    'message' => 'Successfully process the request'
+                ]
+            );
+        unset($payload_create['location_image']);
+        unset($payload_create['location_image_modified']);
+        $this->assertDatabaseHas('meetings', $payload_create);
+        
+        // get last data created
+        $last_meeting = DummyMeeting::orderBy('id', 'desc')->first();
+        $location_image_name = explode('/', $last_meeting->location_image_url);
+        // Assert the file was stored
+        Storage::disk('public_upload')->assertExists('meetings/'.$location_image_name[1]);
+        // --- END for create new meetings with image
+
+        // --- for update the meeting data that has an image
+        $now = Carbon::now()->format('Y_m_d');
+        $payload = [
+            'title' => 'Meeting Update '.$now,
+            'customer' => collect($arr_customer, 1)->random(),
+            'registrant' => collect($arr_registrant, 1)->random(),
+            'location' => collect($arr_location, 1)->random(),
+            'meeting_date' => Carbon::now()->addDay(5)->format('Y-m-d H:i'),
+            'postcode' => collect($arr_postcode, 1)->random(),
+            'address' => 'Address Update'.$selected_postcode,
+            'phone' => '123456789',
+            'location_image' => $this->prepareFileUpload('public/storage/uploads/dummy-img.jpg'),
+            'location_image_modified' => '1' // 1 if there is image data or update image, 0 if no image data
+        ];
+  
+        $this->actingAs($user_login, 'sanctum')
+            ->postJson('api/meetings/'.$last_meeting->id, $payload)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertExactJson(
+                [
+                    'data' => '',
+                    'message' => 'Successfully process the request'
+                ]
+            );
+        
+        $meeting_after_update = DummyMeeting::find($last_meeting->id);
+        unset($payload['location_image']);
+        unset($payload['location_image_modified']);
+        $payload['id'] = $meeting_after_update->id;
+        $this->assertDatabaseHas('meetings', $payload);
+        $location_image_name_after_update = explode('/', $meeting_after_update->location_image_url);
+        // Assert the file was stored
+        Storage::disk('public_upload')->assertExists('meetings/'.$location_image_name_after_update[1]);
+        // Assert the old file was delete
+        Storage::disk('public_upload')->assertMissing('meetings/'.$location_image_name[1]);
+        // --- END for update the meeting data that has an image
+    }
+
+    /**
+     * @group meetingTest
+     * 
+     * test delete meeting 
+     * check the response
+     * and check database
+     * and check image
+     */
+    public function testMeetingIsDestroyedSuccessfullyWithImage() 
+    {
+        // -- get user for login
+        $user_login = $this->testUserLogin();
+        // -- END get user for login
+
+        $this->runSeederCustomerAndMeeting(); // --- run seeder
+
+        // --- for create new meetings with image
+        $now = Carbon::now()->format('Y_m_d');
+        // array for customer
+        $arr_customer = Customer::pluck('id');
+        // array for registrant (users)
+        $arr_registrant = User::pluck('id');
+        // array for location
+        $arr_location = [0, 1];
+        // array postcode just for test
+        $arr_postcode = ['0600000', '0640941', '0600041', '0600042', '0640820', '0600031', '0600001', '0640821', '0600032', '0600002'];
+        $selected_postcode = collect($arr_postcode, 1)->random();
+        
+        $payload = [
+            'title' => 'Meeting '.$now,
+            'customer' => collect($arr_customer, 1)->random(),
+            'registrant' => collect($arr_registrant, 1)->random(),
+            'location' => collect($arr_location, 1)->random(),
+            'meeting_date' => Carbon::now()->addDay()->format('Y-m-d H:i'),
+            'postcode' => collect($arr_postcode, 1)->random(),
+            'address' => 'address '.$selected_postcode,
+            'phone' => '987654321',
+            'location_image' => $this->prepareFileUpload('public/storage/uploads/dummy-img.jpg'),
+            'location_image_modified' => '1' // 1 if there is image data or update image, 0 if no image data
+        ];
+
+        $response_create = $this->actingAs($user_login, 'sanctum')
+            ->postJson('api/meetings', $payload)
+            ->assertStatus(Response::HTTP_OK)
+            ->assertExactJson(
+                [
+                    'data' => '',
+                    'message' => 'Successfully process the request'
+                ]
+            );
+        unset($payload['location_image']);
+        unset($payload['location_image_modified']);
+        $this->assertDatabaseHas('meetings', $payload);
+        
+        // get last data created
+        $last_meeting = DummyMeeting::orderBy('id', 'desc')->first();
+        $location_image_name = explode('/', $last_meeting->location_image_url);
+        // Assert the file was stored
+        Storage::disk('public_upload')->assertExists('meetings/'.$location_image_name[1]);
+        // --- END for create new meetings with image
+
+        // --- for elete meetings with image
+        $this->actingAs($user_login, 'sanctum')
+            ->deleteJson('api/meetings/'.$last_meeting->id)
+            ->assertExactJson(
+                [
+                    'data' => 1, // 1 mean success delete data
+                    'message' => 'Successfully process the request'
+                ]
+            );
+
+        $meeting_check = [
+            'title' => $last_meeting->title,
+            'customer' => $last_meeting->customer,
+            'registrant' => $last_meeting->registrant,
+            'location' => $last_meeting->location,
+            'meeting_date' => $last_meeting->meeting_date,
+            'postcode' => $last_meeting->postcode,
+            'address' => $last_meeting->address,
+            'phone' => $last_meeting->phone
+        ];
+        $this->assertDatabaseMissing('meetings', $meeting_check);
+        // Assert the file was delete
+        Storage::disk('public_upload')->assertMissing('meetings/'.$location_image_name[1]);
+        // --- END for elete meetings with image
     }
 }

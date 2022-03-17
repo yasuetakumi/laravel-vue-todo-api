@@ -147,14 +147,20 @@ class DummyMeetingController extends Controller {
                         $meetings->orderBy(Customer::select('name')->whereColumn('customer', 'customers.id'));
                 }
                 else {
-                    $meetings->orderBy($sortBy, $sortDesc ? 'desc' : 'asc');
+                    $meetings->orderBy($sortBy, $sortDesc == 'true' ? 'desc' : 'asc');
                 }
             }
+        }
+        else {
+            $meetings->orderBy('id', 'desc');
         }
         return $meetings;
     }
 
     private function finalize($meetings, $perPage) {
+        if($perPage < 0) {
+            return $meetings->get();
+        }
         return $meetings->paginate($perPage);
     }
 

@@ -208,7 +208,7 @@ class MeetingTest extends TestCase
         $meeting_check = DummyMeeting::find(1); // --- get data meetings for checking
         $meeting_check_not_found = DummyMeeting::where('customer', '!=' , $meeting_check->customer)->first(); // --- get data to check data does not exist
         $response = $this->actingAs($user_login, 'sanctum')
-            ->getJson('api/meetings?itemsPerPage=10&page=1&sortBy=&sortDesc=&location=&meeting_date_start=&meeting_date_end=&registrant=&title=&customer='.$meeting_check->customer)
+            ->getJson('api/meetings?itemsPerPage=-1&page=1&sortBy=&sortDesc=&location=&meeting_date_start=&meeting_date_end=&registrant=&title=&customer='.$meeting_check->customer)
             ->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment(
                 [
@@ -247,7 +247,7 @@ class MeetingTest extends TestCase
         $meeting_date_check_not_found = new Carbon($meeting_check_not_found->meeting_date);
         // --- END get data to check data does not exist
         $response = $this->actingAs($user_login, 'sanctum')
-            ->getJson('api/meetings?itemsPerPage=10&page=1&sortBy=&sortDesc=&location=&registrant=&title=&customer=&meeting_date_start='.$meeting_date_check->format('Y-m-d').'&meeting_date_end='.$meeting_date_check->format('Y-m-d'))
+            ->getJson('api/meetings?itemsPerPage=-1&page=1&sortBy=&sortDesc=&location=&registrant=&title=&customer=&meeting_date_start='.$meeting_date_check->format('Y-m-d').'&meeting_date_end='.$meeting_date_check->format('Y-m-d'))
             ->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment(
                 [
@@ -284,7 +284,7 @@ class MeetingTest extends TestCase
         // --- get data to check data does not exist
         $meeting_check_not_found = DummyMeeting::where('location', 1)->first(); 
         $response = $this->actingAs($user_login, 'sanctum')
-            ->getJson('api/meetings?itemsPerPage=10&page=1&sortBy=&sortDesc=&registrant=&title=&customer=&meeting_date_start=&meeting_date_end=&location='.$meeting_check->location)
+            ->getJson('api/meetings?itemsPerPage=-1&page=1&sortBy=&sortDesc=&registrant=&title=&customer=&meeting_date_start=&meeting_date_end=&location='.$meeting_check->location)
             ->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment(
                 [
@@ -329,7 +329,7 @@ class MeetingTest extends TestCase
             ->where('registrant', '!=', $meeting_check->registrant_id)
             ->first(); 
         $response = $this->actingAs($user_login, 'sanctum')
-            ->getJson('api/meetings?itemsPerPage=10&page=1&sortBy=&sortDesc=&title=&customer=&meeting_date_start=&meeting_date_end=&location=&registrant='.$meeting_check->r_display_name)
+            ->getJson('api/meetings?itemsPerPage=-1&page=1&sortBy=&sortDesc=&title=&customer=&meeting_date_start=&meeting_date_end=&location=&registrant='.$meeting_check->r_display_name)
             ->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment(
                 [

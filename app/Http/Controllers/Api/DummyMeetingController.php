@@ -53,7 +53,9 @@ class DummyMeetingController extends Controller {
         try {
             $data = $request->all();
             if (array_key_exists('location_image', $data)) {
-                $data['location_image_url'] = Storage::putFile('meetings', $data['location_image']);
+                $data_location_image_url = Storage::putFile('meetings', $data['location_image']);
+                $arr_location_image_url = explode("/", $data_location_image_url);
+                $data['location_image_url'] = $arr_location_image_url[1];
                 unset($data['location_image']);
             }
             unset($data['location_image_modified']);
@@ -75,7 +77,9 @@ class DummyMeetingController extends Controller {
                 $data['location_image_url'] = '';
             }
             if (array_key_exists('location_image', $data)) {
-                $data['location_image_url'] = Storage::putFile('meetings', $data['location_image']);
+                $data_location_image_url = Storage::putFile('meetings', $data['location_image']);
+                $arr_location_image_url = explode("/", $data_location_image_url);
+                $data['location_image_url'] = $arr_location_image_url[1];
                 unset($data['location_image']);
             }
 

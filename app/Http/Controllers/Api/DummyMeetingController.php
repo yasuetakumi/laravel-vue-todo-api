@@ -9,6 +9,8 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use stdClass;
+use File;
+use Response;
 
 class DummyMeetingController extends Controller {
     public function getAll(Request $request) {
@@ -34,7 +36,7 @@ class DummyMeetingController extends Controller {
 
     public function edit(Request $request) {
         $item = DummyMeeting::find($request->meetingId);
-        $item['location_image_url'] = $item['location_image_url'] ? Storage::url($item['location_image_url']) : '';
+        $item['location_image_url'] = $item['location_image_url'] ? route('image.displayImage', $item['location_image_url']) : '';
 
         $data = [];
         $data['item'] = $item;
@@ -173,6 +175,23 @@ class DummyMeetingController extends Controller {
         $data['customers'] = Customer::all();
         $data['locations'] = DummyMeeting::LOCATION;
         $data['registrants'] = User::select('id', 'display_name', 'user_role_id')->get();
+
+        // for mobile apps
+        $data['customers_name'] = Customer::pluck('name');
+        $data['registrants_name'] = User::pluck('display_name');
         return $data;
+    }
+
+    public function displayImage($filename) {
+        $path = storage_path('app/public/uploads/meetings/' . $filename);
+        // dd($path);
+        if (!File::exists($path)) {
+            abort(404);
+        }
+        $file = File::get($path);
+        $type = File::mimeType($path);
+        $response = Response::make($file, 200);
+        $response->header("Content-Type", $type);
+        return $response;
     }
 }

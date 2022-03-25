@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Auth;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
 // ---------------------------------------------------------------------
 // Route for Mobile (Flutter Starter-Kit)
 // ---------------------------------------------------------------------
@@ -82,6 +81,7 @@ Route::middleware(['auth:web,admin,sanctum'])->group(function () {
     Route::get('/meetings/{meetingId}/edit', 'Api\DummyMeetingController@edit');
     Route::post('/meetings/{meetingId}', 'Api\DummyMeetingController@update');
     Route::delete('/meetings/{meetingId}', 'Api\DummyMeetingController@destroy');
+    Route::get('/image/{filename}', 'Api\DummyMeetingController@displayImage')->name('image.displayImage');
     // --------------- //
 
 

@@ -52,15 +52,30 @@ class DummyMeetingController extends Controller {
     public function store(Request $request) {
         try {
             $data = $request->all();
-            if (array_key_exists('location_image', $data)) {
-                $data_location_image_url = Storage::putFile('meetings', $data['location_image']);
-                $arr_location_image_url = explode("/", $data_location_image_url);
-                $data['location_image_url'] = $arr_location_image_url[1];
-                unset($data['location_image']);
-            }
-            unset($data['location_image_modified']);
 
-            DummyMeeting::insert($data);
+            if (array_key_exists('from_mobile', $data)) {
+                $customer           = Customer::where('name', $data['customer_name'])->first();
+                $data['customer']   = $customer->id;
+                $registrant         = User::where('display_name', $data['registrant_name'])->first();
+                $data['registrant'] = $registrant->id;
+
+                if (array_key_exists('location_image', $data)) {
+                    $data_location_image_url = Storage::putFile('meetings', $data['location_image']['file']);
+                    $arr_location_image_url = explode("/", $data_location_image_url);
+                    $data['location_image_url'] = $arr_location_image_url[1];
+                    unset($data['location_image']);
+                }
+            } else {
+                if (array_key_exists('location_image', $data)) {
+                    $data_location_image_url = Storage::putFile('meetings', $data['location_image']);
+                    $arr_location_image_url = explode("/", $data_location_image_url);
+                    $data['location_image_url'] = $arr_location_image_url[1];
+                    unset($data['location_image']);
+                }
+                unset($data['location_image_modified']);
+            }
+
+            DummyMeeting::create($data);
             return successResponse();
         } catch (Exception $e) {
             return errorResponse($e->getMessage());
@@ -183,6 +198,8 @@ class DummyMeetingController extends Controller {
         // for mobile apps
         $data['customers_name'] = Customer::pluck('name');
         $data['registrants_name'] = User::pluck('display_name');
+        $data['location_label'] = ['社内', '社外'];
+        $data['location_value'] = ['0', '1'];
         return $data;
     }
 

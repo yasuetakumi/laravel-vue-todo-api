@@ -5,6 +5,7 @@
 use App\Models\User;
 use Carbon\Carbon;
 use Faker\Generator as Faker;
+use Faker\Factory as FakerFactory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -20,6 +21,7 @@ use Illuminate\Support\Str;
 */
 
 $factory->define(User::class, function (Faker $faker) {
+    $faker  = FakerFactory::create('ja_JP');
     return [
         'user_role_id'      => rand(1, 2), // UserRole:ADMIN or UserRole::USER
         'display_name' => $faker->name,

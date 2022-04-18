@@ -55,4 +55,4 @@ pipelines:
           script:
             - apt-get update
             - apt-get -qq install git-ftp
-            - git ftp init --user $FTP_USERNAME_DEMO --passwd $FTP_PASSWORD_DEMO $FTP_HOST_PATH_DEMO -s deploy_demo_to_xserver
+            - git ftp push --user $FTP_USERNAME_DEMO --passwd $FTP_PASSWORD_DEMO $FTP_HOST_PATH_DEMO -s deploy_demo_to_xserver

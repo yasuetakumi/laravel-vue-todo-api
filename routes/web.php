@@ -2,6 +2,7 @@
 
 use App\Mail\ReportMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------

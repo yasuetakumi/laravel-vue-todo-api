@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,11 @@ Route::get('/{guard}/logout', 'Auth\LoginController@logout');
 
 
 Route::middleware(['auth:web,admin,sanctum'])->group(function () {
+
+    Route::get('/todo/list', 'Api\TodoController@index');
+    Route::post('/todo/store', 'Api\TodoController@store');
+    Route::post('/todo/update', 'Api\TodoController@update');
+    Route::post('/todo/delete', 'Api\TodoController@delete');
 
     // ---------------------------------------------------------------------
     // Route for Mobile (Flutter Starter-Kit)

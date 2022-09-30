@@ -42,6 +42,7 @@ class Kernel extends HttpKernel {
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class, // added for laravel sanctum auth (include session and encrypt cookies internally)
             'throttle:60,1',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\AccessControlAllow::class
         ],
     ];
 
@@ -76,6 +77,7 @@ class Kernel extends HttpKernel {
     protected $middlewarePriority = [
         \Illuminate\Session\Middleware\StartSession::class,
         \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \App\Http\Middleware\AccessControlAllow::class,
         \App\Http\Middleware\Authenticate::class,
         \Illuminate\Routing\Middleware\ThrottleRequests::class,
         \Illuminate\Session\Middleware\AuthenticateSession::class,

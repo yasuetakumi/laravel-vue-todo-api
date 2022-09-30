@@ -16,7 +16,7 @@ class AccessControlAllow
     public function handle($request, Closure $next)
     {
         return $next($request)
-            ->header('Access-Control-Allow-Origin', 'https://study-vue.com') // 「Vueの開発用サーバー」に合わせる。
+            ->header('Access-Control-Allow-Origin', '*')
             ->header('Access-Control-Allow-Credentials', 'true')
             ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
             ->header('Access-Control-Allow-Headers', 'Content-Type');

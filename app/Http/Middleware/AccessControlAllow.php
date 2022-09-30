@@ -17,7 +17,7 @@ class AccessControlAllow
     {
         return $next($request)
             ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Credentials', 'true')
+            ->header('Access-Control-Allow-Credentials', 'false')
             ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
             ->header('Access-Control-Allow-Headers', 'Content-Type');
     }
